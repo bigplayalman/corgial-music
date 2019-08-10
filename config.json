@@ -1,0 +1,11 @@
+{
+  "couchdb": {
+    "uuid": "8e0d92c7-aa11-4661-9111-d3fcde9ddbc7"
+  },
+  "httpd": {
+    "port": 2000
+  },
+  "log": {
+    "level": "info"
+  }
+}
