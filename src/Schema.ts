@@ -8,8 +8,28 @@ export const Schema: RxJsonSchema = {
         type: "string",
         primary: true
       },
-      name: {
-        type: "string",
+      title: {
+        type: "string"
+      },
+      genre: {
+        type: "array",
+        uniqueItems: true,
+        items: {
+          type: "string"
+        }
+      },
+      album: {
+        type: "string"
+      },
+      artists: {
+        type: "array",
+        uniqueItems: true,
+        items: {
+          type: "string"
+        }
+      },
+      year: {
+        type: "number"
       }
     },
     attachments: {
