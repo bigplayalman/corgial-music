@@ -34,7 +34,7 @@ const Container = styled.div`
   transition: border .24s ease-in-out;
 `;
 
-export const FileUpload = (props?: any) => {
+export const FileUpload = (_props?: any) => {
 
   /**
    * @param blob Blob (e.g. Web API File)

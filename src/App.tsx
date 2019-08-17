@@ -1,10 +1,13 @@
 import React, { Component } from "react";
 import Database from "./Database";
 import { FileUpload } from "./FileUpload";
+import Playlist from "./components/Playlist";
+import Player from "./components/Player";
 
 export default class App extends Component {
   state = {
-    dbReady: false
+    dbReady: false,
+    currentSong: null
   };
 
   async componentDidMount() {
@@ -19,6 +22,8 @@ export default class App extends Component {
     return (
       <div className="App">
         <FileUpload />
+        <Playlist />
+        <Player />
       </div>
     );
   }

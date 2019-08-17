@@ -1,6 +1,6 @@
 import {RxJsonSchema} from "rxdb";
 
-export const Schema: RxJsonSchema = {
+export const song: RxJsonSchema = {
   version: 0,
     type: "object",
     properties: {
