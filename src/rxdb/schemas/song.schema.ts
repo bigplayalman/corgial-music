@@ -1,6 +1,14 @@
 import {RxJsonSchema} from "rxdb";
 
-export const song: RxJsonSchema = {
+export interface SongProps {
+  id: string;
+  title: string | undefined;
+  genre: string [] | undefined;
+  album: string | undefined;
+  artists: string [] | undefined;
+  year: number | undefined;
+}
+export const song: RxJsonSchema<SongProps> = {
   version: 0,
     type: "object",
     properties: {

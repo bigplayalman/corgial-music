@@ -24,7 +24,6 @@ export default class Player extends Component {
     const attachment = song.getAttachment(id + "song");
     const buffer = await attachment.getData();
     const src = URL.createObjectURL(buffer);
-    console.log(src);
     this.setState({src});
   }
 

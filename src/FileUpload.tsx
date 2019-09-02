@@ -57,12 +57,20 @@ export const FileUpload = (_props?: any) => {
         year
       });
 
+      const metaid = v4();
+      await Database.meta.insert({
+        id: metaid,
+        song: id,
+        skipped: 0,
+        played: 0
+      });
+
       if (picture && picture.length) {
         const { data, type } = picture[0];
         await song.putAttachment({
           id: id + "art",     // string, name of the attachment like 'cat.jpg'
           data,   // (string|Blob|Buffer) data of the attachment
-          type    // (string) type of the attachment-data like 'image/jpeg'
+          type: type || ""    // (string) type of the attachment-data like 'image/jpeg'
         });
       }
       await song.putAttachment({
