@@ -35,16 +35,18 @@ export default class Player extends Component {
     const streamUrl = URL.createObjectURL(buffer);
     const trackTitle = song.title;
     this.setState({ streamUrl, trackTitle }, () => {
-      this.player.play();
+      this.player.play({streamUrl});
     });
   }
 
-  previousSong(opts: any) {
-    console.log(this.player);
+  previousSong() {
+    if (this.player.audio.currentTime > 5) {
+      this.player.setTime(0);
+    }
   }
 
-  nextSong(opts: any) {
-    console.log(opts);
+  nextSong() {
+
   }
 
   render() {
@@ -54,9 +56,8 @@ export default class Player extends Component {
     return (
       <div>
         <Controls
-          streamUrl={this.state.streamUrl}
-          previousSong={(opts: any) => this.previousSong.bind(this)(opts)}
-          nextSong={(opts: any) => this.nextSong.bind(this)(opts)}
+          previousSong={() => this.previousSong()}
+          nextSong={() => this.nextSong()}
           soundCloudAudio={this.player}
         />
       </div>

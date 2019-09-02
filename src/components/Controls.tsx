@@ -10,12 +10,12 @@ import "react-soundplayer/styles/icons.css";
 export const Controls = withCustomAudio((props: any) => {
   return (
     <div className="controls-container">
-      <PrevButton className="previous" onPrevClick={(e: any) => props.previousSong(e)} />
+      <PrevButton className="previous" onPrevClick={() => props.previousSong()} />
       <PlayButton className="play" {...props} />
-      <NextButton className="next" onNextClick={(e: any) => props.nextSong(e)} />
+      <NextButton className="next" onNextClick={() => props.nextSong()} />
       <Progress className="progress" {...props} />
       <Timer className="timer" {...props} />
-      <VolumeControl {...props}/>
+      <VolumeControl className="volume" {...props}/>
     </div>
   );
 });
