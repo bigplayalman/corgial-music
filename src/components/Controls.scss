@@ -1,0 +1,31 @@
+.controls-container {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 50px 50px 50px 1fr 150px;
+  grid-template-rows: 50px 150px;
+  align-items: center;
+  grid-template-areas:
+    "previous play next progress progress"
+    "timer timer timer timer volume";
+  .previous {
+    grid-area: previous;
+  }
+  .next {
+    grid-area: next;
+  }
+  .volume {
+    display: flex;
+    grid-area: volume;
+  }
+  .progress {
+    grid-area: progress;
+    grid-column: auto / span 2;
+  }
+  .timer {
+    grid-area: timer;
+    grid-column: auto / span 4;
+  }
+  .play {
+    grid-area: play;
+  }
+}

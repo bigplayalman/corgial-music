@@ -1,12 +1,15 @@
 import React, { Component } from "react";
-import Database from "../Database";
 import { Subscription } from "rxjs";
-import { RxDocument } from "rxdb";
+import SoundAudioPlayer from "soundcloud-audio";
+import { Controls } from "./Controls";
+import Database from "../Database";
 
 export default class Player extends Component {
   song!: Subscription;
+  player = new SoundAudioPlayer();
   state = {
-    src: null
+    streamUrl: "",
+    trackTitle: ""
   };
 
   async componentDidMount() {
@@ -20,17 +23,42 @@ export default class Player extends Component {
   }
 
   async getSong(id: string) {
-    const song: RxDocument<any> = await Database.music.findOne().where("id").eq(id).exec();
+    const song = await Database.music.findOne().where("id").eq(id).exec();
+    if (!song) {
+      return;
+    }
     const attachment = song.getAttachment(id + "song");
+    if (!attachment) {
+      return;
+    }
     const buffer = await attachment.getData();
-    const src = URL.createObjectURL(buffer);
-    this.setState({src});
+    const streamUrl = URL.createObjectURL(buffer);
+    const trackTitle = song.title;
+    this.setState({ streamUrl, trackTitle }, () => {
+      this.player.play();
+    });
+  }
+
+  previousSong(opts: any) {
+    console.log(this.player);
+  }
+
+  nextSong(opts: any) {
+    console.log(opts);
   }
 
   render() {
+    if (!this.state.streamUrl) {
+      return <div />;
+    }
     return (
       <div>
-        <audio src={this.state.src || undefined} controls autoPlay />
+        <Controls
+          streamUrl={this.state.streamUrl}
+          previousSong={(opts: any) => this.previousSong.bind(this)(opts)}
+          nextSong={(opts: any) => this.nextSong.bind(this)(opts)}
+          soundCloudAudio={this.player}
+        />
       </div>
     );
   }
