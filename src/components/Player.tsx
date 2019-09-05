@@ -33,10 +33,7 @@ export default class Player extends Component {
     }
     const buffer = await attachment.getData();
     const streamUrl = URL.createObjectURL(buffer);
-    const trackTitle = song.title;
-    this.setState({ streamUrl, trackTitle }, () => {
-      this.player.play({streamUrl});
-    });
+    this.player.play({streamUrl});
   }
 
   previousSong() {
@@ -50,9 +47,6 @@ export default class Player extends Component {
   }
 
   render() {
-    if (!this.state.streamUrl) {
-      return <div />;
-    }
     return (
       <div>
         <Controls

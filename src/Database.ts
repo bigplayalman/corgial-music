@@ -37,6 +37,7 @@ export default class Database {
       schema: playlist
     });
 
+    await this.playlists.insertLocal("current", {playlist: ""});
     await this.music.insertLocal("current", { song: "" });
     this.music.sync({
       remote: "http://localhost:2000/music"

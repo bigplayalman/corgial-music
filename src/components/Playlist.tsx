@@ -9,6 +9,13 @@ export default class Playlist extends Component {
   };
 
   componentDidMount() {
+    // const current = await Database.music.getLocal("current");
+    // current.get$("song").subscribe(id => {
+    //   if (!id) {
+    //     return;
+    //   }
+    //   this.getSong(id);
+    // });
     this.sub = Database.music.$.subscribe((_music: any) => {
       if (_music.isLocal) {
         return;
@@ -23,7 +30,7 @@ export default class Playlist extends Component {
   }
 
   async selectSong(song: any) {
-    await Database.music.upsertLocal("current", {song: song.id});
+    await Database.music.upsertLocal("current", { song: song.id });
   }
 
   render() {
@@ -40,7 +47,7 @@ export default class Playlist extends Component {
               }}
               key={song.id}
               onClick={() => this.selectSong(song)}
-              >
+            >
               {song.title}
             </div>
           );
