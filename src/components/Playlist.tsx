@@ -5,10 +5,14 @@ import { PlaylistProps } from "../rxdb/schemas/playlist.schema";
 import { RxDocument } from "rxdb";
 import { SongProps } from "../rxdb/schemas/song.schema";
 
+interface PlaylistState {
+  songs: RxDocument<SongProps>[];
+  ids: string[];
+}
 export default class Playlist extends Component {
   current!: Subscription;
   sub!: Subscription;
-  state = {
+  state: PlaylistState = {
     songs: [],
     ids: []
   };
@@ -46,16 +50,16 @@ export default class Playlist extends Component {
     this.setState({ songs });
   }
 
-  async selectSong(song: any) {
+  async selectSong(song: string) {
     await Database.music.upsertLocal("queue", { songs: this.state.ids });
-    await Database.music.upsertLocal("current", { song: song.id });
+    await Database.music.upsertLocal("current", { song });
   }
 
   render() {
     return (
       <div>
         <h5>Playlist</h5>
-        {this.state.songs.map((song: any) => {
+        {this.state.songs.map((song) => {
           return (
             <div
               style={{
@@ -64,7 +68,7 @@ export default class Playlist extends Component {
                 border: "1px solid blue"
               }}
               key={song.id}
-              onClick={() => this.selectSong(song)}>
+              onClick={() => this.selectSong(song.id)}>
               {song.title}
             </div>
           );

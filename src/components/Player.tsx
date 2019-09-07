@@ -32,6 +32,10 @@ export default class Player extends Component {
       }
       this.getSong(id);
     });
+    this.player.on("ended", () => {
+      console.log("song ended");
+      this.nextSong();
+    });
   }
 
   async getSong(id: string) {
@@ -58,7 +62,7 @@ export default class Player extends Component {
     if (position) {
       const song = this.state.songs[position - 1];
       this.setState({ current: song }, () => {
-        this.getSong(song);
+        Database.music.upsertLocal("current", { song });
       });
       return;
     }
@@ -70,7 +74,7 @@ export default class Player extends Component {
     if (position < this.state.songs.length) {
       const song = this.state.songs[position + 1];
       this.setState({ current: song }, () => {
-        this.getSong(song);
+        Database.music.upsertLocal("current", { song });
       });
     }
   }
@@ -91,5 +95,6 @@ export default class Player extends Component {
   componentWillUnmount() {
     this.queue.unsubscribe();
     this.song.unsubscribe();
+    this.player.unbindAll();
   }
 }
