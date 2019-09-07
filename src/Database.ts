@@ -39,15 +39,6 @@ export default class Database {
       schema: playlist
     });
 
-    let latestPlaylist = await this.playlists.findOne().where("name").eq("Last Added").exec();
-
-    if (!latestPlaylist) {
-      const id = v4();
-      latestPlaylist = await this.playlists.newDocument({id, name: "Last Added", count: 0, songs: []});
-      await latestPlaylist.save();
-    }
-
-    this.latestPlaylist = latestPlaylist;
     await this.playlists.insertLocal("current", { playlist: "" });
     await this.music.insertLocal("current", { song: "" });
 
@@ -57,9 +48,25 @@ export default class Database {
     this.meta.sync({
       remote: "http://localhost:2000/meta"
     });
-    this.playlists.sync({
-      remote: "http://localhost:2000/playlists"
+    const sync = this.playlists.sync({
+      remote: "http://localhost:2000/playlists",
+      options: {
+        live: false
+      }
     });
 
+    sync.complete$.subscribe(async (completed) => {
+      if (completed) {
+        let latestPlaylist = await this.playlists.findOne().where("name").eq("Last Added").exec();
+        if (!latestPlaylist) {
+          const id = v4();
+          latestPlaylist = this.playlists.newDocument({ id, name: "Last Added", count: 0, songs: [] });
+          await latestPlaylist.save();
+        }
+
+        this.latestPlaylist = latestPlaylist;
+        this.playlists.sync({remote: "http://localhost:2000/playlists"});
+      }
+    });
   }
 }

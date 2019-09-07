@@ -3,6 +3,7 @@ import Database from "./Database";
 import { FileUpload } from "./FileUpload";
 import Playlist from "./components/Playlist";
 import Player from "./components/Player";
+import Playlists from "./components/Playlists";
 
 export default class App extends Component {
   state = {
@@ -22,6 +23,7 @@ export default class App extends Component {
     return (
       <div className="App">
         <FileUpload />
+        <Playlists />
         <Playlist />
         <Player />
       </div>

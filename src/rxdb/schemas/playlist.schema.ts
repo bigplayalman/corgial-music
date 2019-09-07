@@ -24,9 +24,9 @@ export const playlist: RxJsonSchema<PlaylistProps> = {
       },
       songs: {
         type: "array",
+        ref: "music",
         items: {
-          type: "string",
-          ref: "music",
+          type: "string"
         }
       }
     }

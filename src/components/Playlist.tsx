@@ -1,32 +1,45 @@
 import React, { Component } from "react";
 import Database from "../Database";
 import { Subscription } from "rxjs";
+import { PlaylistProps } from "../rxdb/schemas/playlist.schema";
+import { RxDocument } from "rxdb";
 
 export default class Playlist extends Component {
+  current!: Subscription;
   sub!: Subscription;
   state = {
     songs: []
   };
 
   componentDidMount() {
-    // const current = await Database.music.getLocal("current");
-    // current.get$("song").subscribe(id => {
-    //   if (!id) {
-    //     return;
-    //   }
-    //   this.getSong(id);
-    // });
-    this.sub = Database.music.$.subscribe((_music: any) => {
-      if (_music.isLocal) {
+    this.initialize();
+  }
+
+  async initialize() {
+    const current = await Database.playlists.getLocal("current");
+    this.current = current.get$("playlist").subscribe((id) => {
+      if (!id) {
         return;
       }
-      this.getMusic();
+
+      this.getPlaylist(id);
     });
   }
 
-  async getMusic() {
-    const songs = await Database.music.find().exec();
-    this.setState({ songs });
+  async getPlaylist(id: string) {
+    const playlist = await Database.playlists.findOne({ id }).exec();
+    if (playlist) {
+      this.sub = playlist.$.subscribe((change) => {
+        if (playlist.songs && playlist.songs.length) {
+          this.fetchSongs(playlist);
+        }
+      });
+    }
+  }
+
+  async fetchSongs(playlist: RxDocument<PlaylistProps>) {
+    const songs = await playlist.populate("songs");
+    this.setState({songs});
   }
 
   async selectSong(song: any) {
@@ -46,8 +59,7 @@ export default class Playlist extends Component {
                 border: "1px solid blue"
               }}
               key={song.id}
-              onClick={() => this.selectSong(song)}
-            >
+              onClick={() => this.selectSong(song)}>
               {song.title}
             </div>
           );
@@ -58,5 +70,6 @@ export default class Playlist extends Component {
 
   componentWillUnmount() {
     this.sub.unsubscribe();
+    this.current.unsubscribe();
   }
 }

@@ -43,9 +43,9 @@ export const meta: RxJsonSchema<MetaProps> = {
       },
       playlists: {
         type: "array",
+        ref: "playlist",
         items: {
-          type: "string",
-          ref: "playlist",
+          type: "string"
         }
       }
     }

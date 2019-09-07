@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
 import * as mm from "music-metadata-browser";
@@ -35,6 +35,7 @@ const Container = styled.div`
 `;
 
 export const FileUpload = (_props?: any) => {
+
   /**
    * @param blob Blob (e.g. Web API File)
    */
@@ -46,7 +47,13 @@ export const FileUpload = (_props?: any) => {
     const handleFile = async (file: File) => {
       const metadata = await readFromBlob(file);
       const id = v4();
-      const { title, artists, genre, album, year, picture } = metadata.common;
+      let title = metadata.common.title;
+      const { artists, genre, album, year, picture } = metadata.common;
+
+      if (!title) {
+        title = file.name;
+      }
+
       const song = await Database.music.upsert({
         id,
         title,
@@ -64,6 +71,11 @@ export const FileUpload = (_props?: any) => {
         played: 0
       });
 
+      const playlist = Database.latestPlaylist.toJSON();
+      playlist.songs.push(id);
+      delete playlist._rev;
+      await Database.playlists.upsert(playlist);
+
       if (picture && picture.length) {
         const { data, type } = picture[0];
         await song.putAttachment({
@@ -72,6 +84,7 @@ export const FileUpload = (_props?: any) => {
           type: type || ""    // (string) type of the attachment-data like 'image/jpeg'
         });
       }
+
       await song.putAttachment({
         id: id + "song",
         data: file,
