@@ -29,7 +29,7 @@ export default class Playlist extends Component {
   async getPlaylist(id: string) {
     const playlist = await Database.playlists.findOne({ id }).exec();
     if (playlist) {
-      this.sub = playlist.$.subscribe((change) => {
+      this.sub = playlist.$.subscribe((_change) => {
         if (playlist.songs && playlist.songs.length) {
           this.fetchSongs(playlist);
         }
