@@ -3,12 +3,14 @@ import Database from "../Database";
 import { Subscription } from "rxjs";
 import { PlaylistProps } from "../rxdb/schemas/playlist.schema";
 import { RxDocument } from "rxdb";
+import { SongProps } from "../rxdb/schemas/song.schema";
 
 export default class Playlist extends Component {
   current!: Subscription;
   sub!: Subscription;
   state = {
-    songs: []
+    songs: [],
+    ids: []
   };
 
   componentDidMount() {
@@ -31,18 +33,21 @@ export default class Playlist extends Component {
     if (playlist) {
       this.sub = playlist.$.subscribe((_change) => {
         if (playlist.songs && playlist.songs.length) {
-          this.fetchSongs(playlist);
+          this.setState({ids: playlist.songs}, () => {
+            this.fetchSongs(playlist);
+          });
         }
       });
     }
   }
 
   async fetchSongs(playlist: RxDocument<PlaylistProps>) {
-    const songs = await playlist.populate("songs");
-    this.setState({songs});
+    const songs: SongProps[] = await playlist.populate("songs");
+    this.setState({ songs });
   }
 
   async selectSong(song: any) {
+    await Database.music.upsertLocal("queue", { songs: this.state.ids });
     await Database.music.upsertLocal("current", { song: song.id });
   }
 

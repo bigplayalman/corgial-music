@@ -8,6 +8,7 @@ import "react-soundplayer/styles/volume.css";
 import "react-soundplayer/styles/icons.css";
 
 export const Controls = withCustomAudio((props: any) => {
+
   return (
     <div className="controls-container">
       <PrevButton className="previous" onPrevClick={() => props.previousSong()} />

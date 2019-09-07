@@ -39,6 +39,7 @@ export default class Database {
       schema: playlist
     });
 
+    await this.music.insertLocal("queue", {songs: []});
     await this.playlists.insertLocal("current", { playlist: "" });
     await this.music.insertLocal("current", { song: "" });
 
