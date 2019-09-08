@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
 import * as mm from "music-metadata-browser";
@@ -43,7 +43,9 @@ export const FileUpload = (_props?: any) => {
     return mm.parseBlob(blob);
   };
 
-  const onDrop = useCallback(acceptedFiles => {
+  const [dtitle, setDtitle] =  useState();
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const handleFile = async (file: File) => {
       const metadata = await readFromBlob(file);
       const id = v4();
@@ -53,36 +55,11 @@ export const FileUpload = (_props?: any) => {
       if (!title) {
         title = file.name;
       }
-
-      const song = await Database.music.upsert({
-        id,
-        title,
-        artists,
-        genre,
-        album,
-        year
-      });
-
-      const metaid = v4();
-      await Database.meta.upsert({
-        id: metaid,
-        song: id,
-        skipped: 0,
-        played: 0
-      });
-
-      const playlist = Database.latestPlaylist.toJSON();
-      playlist.songs.push(id);
-      delete playlist._rev;
-      await Database.playlists.upsert(playlist);
-
+      setDtitle(title);
+      const song = await Database.music.upsert({ id, title, artists, genre, album, year });
       if (picture && picture.length) {
         const { data, type } = picture[0];
-        await song.putAttachment({
-          id: id + "art",     // string, name of the attachment like 'cat.jpg'
-          data,   // (string|Blob|Buffer) data of the attachment
-          type: type || ""    // (string) type of the attachment-data like 'image/jpeg'
-        });
+        await song.putAttachment({ id: id + "art", data, type: type || "" });
       }
 
       await song.putAttachment({
@@ -90,7 +67,15 @@ export const FileUpload = (_props?: any) => {
         data: file,
         type: file.type
       });
+      const playlist = Database.latestPlaylist.toJSON();
+      playlist.songs.push(id);
+      delete playlist._rev;
+      await Database.meta.upsert({ id, song: id, skipped: 0, played: 0 });
+      await Database.playlists.upsert(playlist);
     };
+    for (const file of acceptedFiles) {
+      await handleFile(file);
+    }
     acceptedFiles.forEach((file: File) => handleFile(file));
   }, []);
 
@@ -108,6 +93,7 @@ export const FileUpload = (_props?: any) => {
         <input {...getInputProps()} />
         <p>Drag 'n' drop some files here, or click to select files</p>
       </Container>
+      {dtitle}
     </div>
   );
 };
