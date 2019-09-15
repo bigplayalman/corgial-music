@@ -33,22 +33,3 @@
     grid-area: play;
   }
 }
-
-meter::-webkit-meter-bar {
-  /* Let's animate this */
-  animation: animate-stripes 5s linear infinite;
-  background-image:
-    linear-gradient(
-      135deg,
-      transparent,
-      transparent 33%,
-      rgba(0, 0, 0, 0.1) 33%,
-      rgba(0, 0, 0, 0.1) 66%,
-      transparent 66%
-    );
-  background-size: 50px 25px;
-}
-
-@keyframes animate-stripes {
-  to { background-position: -50px 0; }
-}
