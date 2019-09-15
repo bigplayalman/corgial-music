@@ -43,9 +43,11 @@ export const FileUpload = (_props?: any) => {
     return mm.parseBlob(blob);
   };
 
-  const [dtitle, setDtitle] =  useState();
+  const [count, setCount] = useState(0);
+  const [length, setLength] = useState(0);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    setLength(acceptedFiles.length);
     const handleFile = async (file: File) => {
       const metadata = await readFromBlob(file);
       const id = v4();
@@ -53,30 +55,27 @@ export const FileUpload = (_props?: any) => {
       const { artists, genre, album, year, picture } = metadata.common;
 
       if (!title) {
-        title = file.name;
+        title = file.name.split(".")[0];
       }
-      setDtitle(title);
       const song = await Database.music.upsert({ id, title, artists, genre, album, year });
       if (picture && picture.length) {
         const { data, type } = picture[0];
         await song.putAttachment({ id: id + "art", data, type: type || "" });
       }
 
-      await song.putAttachment({
-        id: id + "song",
-        data: file,
-        type: file.type
-      });
-      const playlist = Database.latestPlaylist.toJSON();
-      playlist.songs.push(id);
-      delete playlist._rev;
+      await song.putAttachment({ id: id + "song", data: file, type: file.type });
+      const songs = Database.latestPlaylist.songs || [];
+      songs.push(id);
       await Database.meta.upsert({ id, song: id, skipped: 0, played: 0 });
-      await Database.playlists.upsert(playlist);
+      await Database.latestPlaylist.atomicSet("songs", songs);
     };
+    let index = 0;
     for (const file of acceptedFiles) {
+      index++;
+      setCount(index);
       await handleFile(file);
     }
-    acceptedFiles.forEach((file: File) => handleFile(file));
+    setLength(0);
   }, []);
 
   const {
@@ -93,7 +92,7 @@ export const FileUpload = (_props?: any) => {
         <input {...getInputProps()} />
         <p>Drag 'n' drop some files here, or click to select files</p>
       </Container>
-      {dtitle}
+      <meter value={count} max={length} hidden={length === 0} />
     </div>
   );
 };

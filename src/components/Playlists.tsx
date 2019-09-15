@@ -18,7 +18,7 @@ export default class Playlists extends Component<any, IState> {
 
   async initialize() {
     this.sub = Database.playlists.$.subscribe(async (_change) => {
-      const playlists = await Database.playlists.find().exec();
+      const playlists = await Database.playlists.find().where("songs").exists(true).exec();
       this.setState({ playlists });
     });
   }

@@ -4,6 +4,7 @@ import { FileUpload } from "./FileUpload";
 import Playlist from "./components/Playlist";
 import Player from "./components/Player";
 import Playlists from "./components/Playlists";
+import Delete from "./components/Delete";
 
 export default class App extends Component {
   state = {
@@ -11,7 +12,11 @@ export default class App extends Component {
     currentSong: null
   };
 
-  async componentDidMount() {
+  componentDidMount() {
+    this.setupDB();
+  }
+
+  async setupDB() {
     await Database.init();
     this.setState({dbReady: true});
   }
@@ -26,6 +31,7 @@ export default class App extends Component {
         <Playlists />
         <Playlist />
         <Player />
+        <Delete />
       </div>
     );
   }

@@ -5,7 +5,6 @@ import { song, playlist, meta } from "./rxdb/schemas";
 import { MetaProps } from "./rxdb/schemas/meta.schema";
 import { SongProps } from "./rxdb/schemas/song.schema";
 import { PlaylistProps } from "./rxdb/schemas/playlist.schema";
-import { v4 } from "uuid";
 
 RxDB.plugin(PouchAdapterMemory);
 RxDB.plugin(PouchAdapterHttp);
@@ -22,8 +21,9 @@ export default class Database {
       name: "corgialmusic",
       adapter: "memory",
       multiInstance: false,
-      queryChangeDetection: false
+      queryChangeDetection: true
     });
+
     this.music = await this.db.collection({
       name: "music",
       schema: song
@@ -58,9 +58,9 @@ export default class Database {
 
     sync.complete$.subscribe(async (completed) => {
       if (completed) {
-        let latestPlaylist = await this.playlists.findOne().where("name").eq("Last Added").exec();
+        let latestPlaylist = await this.playlists.findOne().where("id").eq("latest").exec();
         if (!latestPlaylist) {
-          const id = v4();
+          const id = "latest";
           latestPlaylist = this.playlists.newDocument({ id, name: "Last Added", count: 0, songs: [] });
           await latestPlaylist.save();
         }
