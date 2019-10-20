@@ -1,12 +1,14 @@
 import React, { Component } from "react";
-import Database from "../Database";
+import * as Database from "../Database";
 import { PlaylistProps } from "../rxdb/schemas/playlist.schema";
 import { Subscription } from "rxjs";
+import { RxDatabase } from "rxdb";
 
 interface IState {
   playlists: PlaylistProps[];
 }
 export default class Playlists extends Component<any, IState> {
+  db!: RxDatabase<Database.DatabaseCollections>;
   sub!: Subscription;
   state: IState = {
     playlists: []
@@ -17,14 +19,19 @@ export default class Playlists extends Component<any, IState> {
   }
 
   async initialize() {
-    this.sub = Database.playlists.$.subscribe(async (_change) => {
-      const playlists = await Database.playlists.find().where("songs").exists(true).exec();
-      this.setState({ playlists });
+    this.db = await Database.get();
+    this.sub = this.db.playlists.$.subscribe((_change) => {
+      this.fetchPlaylists();
     });
   }
 
+  async fetchPlaylists() {
+    const playlists = await this.db.playlists.find().exec();
+    this.setState({ playlists });
+  }
+
   async selectPlaylist(playlist: any) {
-    await Database.playlists.upsertLocal("current", { playlist: playlist.id });
+    await this.db.playlists.upsertLocal("current", { playlist: playlist.id });
   }
 
   render() {

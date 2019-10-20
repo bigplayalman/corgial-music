@@ -7,6 +7,12 @@ export interface SongProps {
   album: string | undefined;
   artists: string [] | undefined;
   year: number | undefined;
+  tags?: string [];
+  favorite?: boolean;
+  skipped: number;
+  played: number;
+  filename: string;
+  playlists?: string [];
 }
 export const song: RxJsonSchema<SongProps> = {
   version: 0,
@@ -38,9 +44,34 @@ export const song: RxJsonSchema<SongProps> = {
       },
       year: {
         type: "number"
+      },
+      tags: {
+        type: "array",
+        uniqueItems: true,
+        items: {
+          type: "string"
+        }
+      },
+      favorite: {
+        type: "boolean"
+      },
+      skipped: {
+        type: "number",
+        default: 0,
+      },
+      played: {
+        type: "number",
+        default: 0,
+      },
+      playlists: {
+        type: "array",
+        ref: "playlists",
+        items: {
+          type: "string"
+        }
+      },
+      filename: {
+        type: "string"
       }
-    },
-    attachments: {
-      encrypted: false
     }
 };

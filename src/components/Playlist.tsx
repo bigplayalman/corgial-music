@@ -1,15 +1,17 @@
 import React, { Component } from "react";
-import Database from "../Database";
+import * as Database from "../Database";
 import { Subscription } from "rxjs";
 import { PlaylistProps } from "../rxdb/schemas/playlist.schema";
-import { RxDocument } from "rxdb";
+import { RxDocument, RxDatabase } from "rxdb";
 import { SongProps } from "../rxdb/schemas/song.schema";
+import { DatabaseCollections } from "../Database";
 
 interface PlaylistState {
   songs: RxDocument<SongProps>[];
   ids: string[];
 }
 export default class Playlist extends Component {
+  db!: RxDatabase<DatabaseCollections>;
   current!: Subscription;
   sub!: Subscription;
   state: PlaylistState = {
@@ -22,18 +24,18 @@ export default class Playlist extends Component {
   }
 
   async initialize() {
-    const current = await Database.playlists.getLocal("current");
+    this.db = await Database.get();
+    const current = await this.db.playlists.getLocal("current");
     this.current = current.get$("playlist").subscribe((id) => {
       if (!id) {
         return;
       }
-
       this.getPlaylist(id);
     });
   }
 
   async getPlaylist(id: string) {
-    const playlist = await Database.playlists.findOne({ id }).exec();
+    const playlist = await this.db.playlists.findOne({ id }).exec();
     if (playlist) {
       this.sub = playlist.$.subscribe((_change) => {
         if (playlist.songs && playlist.songs.length) {
@@ -51,8 +53,8 @@ export default class Playlist extends Component {
   }
 
   async selectSong(song: string) {
-    await Database.music.upsertLocal("queue", { songs: this.state.ids });
-    await Database.music.upsertLocal("current", { song });
+    await this.db.songs.upsertLocal("queue", { songs: this.state.ids });
+    await this.db.songs.upsertLocal("current", { song });
   }
 
   render() {

@@ -2,7 +2,9 @@ import React, { Component } from "react";
 import { Subscription } from "rxjs";
 import SoundAudioPlayer from "soundcloud-audio";
 import { Controls } from "./Controls";
-import Database from "../Database";
+import * as Database from "../Database";
+import { RxDatabase } from "rxdb";
+import * as base64 from "base-64";
 
 interface PlayerState {
   trackTitle: string;
@@ -10,6 +12,7 @@ interface PlayerState {
   songs: string[];
 }
 export default class Player extends Component {
+  db!: RxDatabase<Database.DatabaseCollections>;
   song!: Subscription;
   queue!: Subscription;
   player = new SoundAudioPlayer();
@@ -19,9 +22,14 @@ export default class Player extends Component {
     songs: []
   };
 
-  async componentDidMount() {
-    const current = await Database.music.getLocal("current");
-    const queue = await Database.music.getLocal("queue");
+  componentDidMount() {
+    this.initializePlayer();
+  }
+
+  async initializePlayer() {
+    this.db = await Database.get();
+    const current = await this.db.songs.getLocal("current");
+    const queue = await this.db.songs.getLocal("queue");
     this.queue = queue.get$("songs").subscribe((songs) => {
       this.setState({ songs });
     });
@@ -39,18 +47,24 @@ export default class Player extends Component {
   }
 
   async getSong(id: string) {
-    const song = await Database.music.findOne().where("id").eq(id).exec();
+    const song = await this.db.songs.findOne({ id }).exec();
     if (!song) {
       return;
     }
-    const attachment = song.getAttachment(id + "song");
-    if (!attachment) {
+
+    const streamUrl = await fetch(`http://localhost:3300/api/download?filename=${song.filename}`, {
+      method: "GET",
+      headers: new Headers({
+        Authorization: `Basic ${base64.encode(`admin:admin`)}`
+      })
+    }).then((res) => {
+      return res.text();
+    });
+    if (!streamUrl) {
       return;
     }
-    const buffer = await attachment.getData();
-    const streamUrl = URL.createObjectURL(buffer);
     this.setState({ current: id, trackTitle: song.title });
-    this.player.play({ streamUrl });
+    this.player.play({ streamUrl: `https://${streamUrl}` });
   }
 
   previousSong() {
@@ -62,7 +76,7 @@ export default class Player extends Component {
     if (position) {
       const song = this.state.songs[position - 1];
       this.setState({ current: song }, () => {
-        Database.music.upsertLocal("current", { song });
+        this.db.songs.upsertLocal("current", { song });
       });
       return;
     }
@@ -74,7 +88,7 @@ export default class Player extends Component {
     if (position < this.state.songs.length) {
       const song = this.state.songs[position + 1];
       this.setState({ current: song }, () => {
-        Database.music.upsertLocal("current", { song });
+        this.db.songs.upsertLocal("current", { song });
       });
     }
   }

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Database from "./Database";
+import * as Database from "./Database";
 import { FileUpload } from "./FileUpload";
 import Playlist from "./components/Playlist";
 import Player from "./components/Player";
@@ -8,8 +8,7 @@ import Delete from "./components/Delete";
 
 export default class App extends Component {
   state = {
-    dbReady: false,
-    currentSong: null
+    dbReady: false
   };
 
   componentDidMount() {
@@ -17,8 +16,8 @@ export default class App extends Component {
   }
 
   async setupDB() {
-    await Database.init();
-    this.setState({dbReady: true});
+    await Database.get();
+    this.setState({ dbReady: true });
   }
 
   render() {

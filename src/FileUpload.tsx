@@ -1,9 +1,10 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
 import * as mm from "music-metadata-browser";
-import Database from "./Database";
+import * as Database from "./Database";
 import { v4 } from "uuid";
+import * as base64 from "base-64";
 
 const getColor = (props: any) => {
   if (props.isDragAccept) {
@@ -43,39 +44,55 @@ export const FileUpload = (_props?: any) => {
     return mm.parseBlob(blob);
   };
 
-  const [count, setCount] = useState(0);
-  const [length, setLength] = useState(0);
-
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    setLength(acceptedFiles.length);
+    const db = await Database.get();
+    let playlist = await db.playlists.findOne("all").exec();
+    if (!playlist) {
+      playlist = await db.playlists.insert({ id: "all", name: "All", count: 0, songs: [] });
+    }
+    const songs = playlist.songs;
     const handleFile = async (file: File) => {
       const metadata = await readFromBlob(file);
       const id = v4();
       let title = metadata.common.title;
-      const { artists, genre, album, year, picture } = metadata.common;
+      const { artists, genre, album, year } = metadata.common;
 
       if (!title) {
         title = file.name.split(".")[0];
       }
-      const song = await Database.music.upsert({ id, title, artists, genre, album, year });
-      if (picture && picture.length) {
-        const { data, type } = picture[0];
-        await song.putAttachment({ id: id + "art", data, type: type || "" });
-      }
 
-      await song.putAttachment({ id: id + "song", data: file, type: file.type });
-      const songs = Database.latestPlaylist.songs || [];
+      await db.songs.atomicUpsert({
+        id, title, artists, genre, album, year, tags: [],
+        favorite: false, skipped: 0, played: 0, playlists: ["all"],
+        filename: file.name
+      });
+
+      // if (picture && picture.length) {
+      //   const { data, type } = picture[0];
+      //   await song.putAttachment({ id: id + "art", data, type: type || "" });
+      // }
+
+      const songData  = new FormData();
+      songData.append("file", file);
+
+      await fetch("http://localhost:3300/api/upload", {
+        method: "POST",
+        headers: new Headers({
+          Authorization: `Basic ${base64.encode(`admin:admin`)}`
+        }),
+        body: songData
+      });
+
       songs.push(id);
-      await Database.meta.upsert({ id, song: id, skipped: 0, played: 0 });
-      await Database.latestPlaylist.atomicSet("songs", songs);
     };
-    let index = 0;
+
     for (const file of acceptedFiles) {
-      index++;
-      setCount(index);
       await handleFile(file);
     }
-    setLength(0);
+    if (playlist) {
+      await playlist.atomicSet("songs", songs);
+    }
+
   }, []);
 
   const {
@@ -92,7 +109,6 @@ export const FileUpload = (_props?: any) => {
         <input {...getInputProps()} />
         <p>Drag 'n' drop some files here, or click to select files</p>
       </Container>
-      <meter value={count} max={length} hidden={length === 0} />
     </div>
   );
 };
