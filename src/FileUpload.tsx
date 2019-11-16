@@ -1,114 +1,102 @@
-import React, { useCallback } from "react";
-import { useDropzone } from "react-dropzone";
-import styled from "styled-components";
+import React, { Component } from "react";
 import * as mm from "music-metadata-browser";
 import * as Database from "./Database";
 import { v4 } from "uuid";
-import * as base64 from "base-64";
+import Uppy from "@uppy/core";
+import AwsS3 from "@uppy/aws-s3";
+import ms from "ms";
+import { Dashboard } from "@uppy/react";
+import "@uppy/core/dist/style.css";
+import "@uppy/dashboard/dist/style.css";
+import { Subscription } from "rxjs";
 
-const getColor = (props: any) => {
-  if (props.isDragAccept) {
-    return "#00e676";
+export class FileUpload extends Component {
+  uppy!: Uppy.Uppy;
+  insertSong!: Subscription;
+  constructor(props: any) {
+    super(props);
+    this.uppy = Uppy({
+      id: "corgial",
+      autoProceed: true,
+      debug: true,
+      restrictions: {
+        maxNumberOfFiles: 10,
+        allowedFileTypes: [".mp3", ".flac"]
+      }
+    });
   }
-  if (props.isDragReject) {
-    return "#ff1744";
+
+  componentDidMount() {
+    this.subDB();
+    this.uppy = this.uppy.use(AwsS3, {
+      limit: 10,
+      timeout: ms("1 minute"),
+      companionUrl: "http://localhost:3300"
+    });
+    const plugin: any = this.uppy.getPlugin("XHRUpload");
+    plugin.opts.limit = 10;
+    this.uppy.on("upload-success", async (file, _response) => {
+      const metadata = await mm.parseBlob(file.data);
+      const id = v4();
+      let title = metadata.common.title;
+      const { artists, genre, album } = metadata.common;
+
+      if (!title) {
+        title = file.name.split(".")[0];
+      }
+      const db = await Database.get();
+      await db.songs.atomicUpsert({
+        id, title, artists, genre, album, tags: [],
+        favorite: false, skipped: 0, played: 0, playlists: ["all"],
+        filename: file.name
+      });
+    });
+    this.uppy.on("upload", () => {
+      console.log("upload started");
+    });
+    this.uppy.on("complete", (_result) => {
+      console.log("jobs done");
+    });
+    this.setState({ ready: true });
   }
-  if (props.isDragActive) {
-    return "#2196f3";
-  }
-  return "#eeeeee";
-};
 
-const Container = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  border-width: 2px;
-  border-radius: 2px;
-  border-color: ${(props: any) => getColor(props)};
-  border-style: dashed;
-  background-color: #fafafa;
-  color: #bdbdbd;
-  outline: none;
-  transition: border .24s ease-in-out;
-`;
-
-export const FileUpload = (_props?: any) => {
-
-  /**
-   * @param blob Blob (e.g. Web API File)
-   */
-  const readFromBlob = (blob: Blob) => {
-    return mm.parseBlob(blob);
-  };
-
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+  async subDB() {
     const db = await Database.get();
     let playlist = await db.playlists.findOne("all").exec();
     if (!playlist) {
       playlist = await db.playlists.insert({ id: "all", name: "All", count: 0, songs: [] });
     }
-    const songs = playlist.songs;
-    const handleFile = async (file: File) => {
-      const metadata = await readFromBlob(file);
-      const id = v4();
-      let title = metadata.common.title;
-      const { artists, genre, album, year } = metadata.common;
 
-      if (!title) {
-        title = file.name.split(".")[0];
+    this.insertSong = db.songs.insert$.subscribe(async (event) => {
+      if (playlist) {
+        const songs = playlist.songs;
+        songs.push(event.data.doc);
+        await playlist.atomicUpdate((data) => {
+          data.songs = songs;
+          data.count = songs.length;
+          return data;
+        });
       }
+    });
+  }
 
-      await db.songs.atomicUpsert({
-        id, title, artists, genre, album, year, tags: [],
-        favorite: false, skipped: 0, played: 0, playlists: ["all"],
-        filename: file.name
-      });
+  componentWillUnmount() {
+    this.uppy.off("complete", () => {
+      console.log("unsubscribed");
+    });
+    this.uppy.off("upload-success", () => { });
+    this.uppy.close();
+    this.insertSong.unsubscribe();
+  }
 
-      // if (picture && picture.length) {
-      //   const { data, type } = picture[0];
-      //   await song.putAttachment({ id: id + "art", data, type: type || "" });
-      // }
-
-      const songData  = new FormData();
-      songData.append("file", file);
-
-      await fetch("http://localhost:3300/api/upload", {
-        method: "POST",
-        headers: new Headers({
-          Authorization: `Basic ${base64.encode(`admin:admin`)}`
-        }),
-        body: songData
-      });
-
-      songs.push(id);
-    };
-
-    for (const file of acceptedFiles) {
-      await handleFile(file);
-    }
-    if (playlist) {
-      await playlist.atomicSet("songs", songs);
-    }
-
-  }, []);
-
-  const {
-    getRootProps,
-    getInputProps,
-    isDragActive,
-    isDragAccept,
-    isDragReject
-  } = useDropzone({ onDrop });
-
-  return (
-    <div className="container">
-      <Container {...getRootProps({ isDragActive, isDragAccept, isDragReject })}>
-        <input {...getInputProps()} />
-        <p>Drag 'n' drop some files here, or click to select files</p>
-      </Container>
-    </div>
-  );
-};
+  render() {
+    return (
+      <div className="container">
+        <Dashboard
+          uppy={this.uppy}
+          showLinkToFileUploadResult={false}
+        />
+      </div>
+    );
+  }
+}

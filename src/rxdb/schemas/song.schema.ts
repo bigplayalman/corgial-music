@@ -6,7 +6,6 @@ export interface SongProps {
   genre: string [] | undefined;
   album: string | undefined;
   artists: string [] | undefined;
-  year: number | undefined;
   tags?: string [];
   favorite?: boolean;
   skipped: number;
@@ -41,9 +40,6 @@ export const song: RxJsonSchema<SongProps> = {
         items: {
           type: "string"
         }
-      },
-      year: {
-        type: "number"
       },
       tags: {
         type: "array",

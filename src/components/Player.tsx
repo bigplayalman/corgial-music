@@ -53,10 +53,7 @@ export default class Player extends Component {
     }
 
     const streamUrl = await fetch(`http://localhost:3300/api/download?filename=${song.filename}`, {
-      method: "GET",
-      headers: new Headers({
-        Authorization: `Basic ${base64.encode(`admin:admin`)}`
-      })
+      method: "GET"
     }).then((res) => {
       return res.text();
     });
