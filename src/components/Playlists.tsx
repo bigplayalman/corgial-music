@@ -21,14 +21,12 @@ export default class Playlists extends Component<any, IState> {
   async initialize() {
     this.db = await Database.get();
     this.sub = this.db.playlists.$.subscribe((_change) => {
-      console.log("change");
       this.fetchPlaylists();
     });
   }
 
   async fetchPlaylists() {
     const playlists = await this.db.playlists.find({ name: { $exists: true } }).exec();
-    console.log(playlists);
     this.setState({ playlists });
   }
 

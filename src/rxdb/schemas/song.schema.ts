@@ -11,6 +11,7 @@ export interface SongProps {
   skipped: number;
   played: number;
   filename: string;
+  picture: string;
   playlists?: string [];
 }
 export const song: RxJsonSchema<SongProps> = {
@@ -65,6 +66,9 @@ export const song: RxJsonSchema<SongProps> = {
         items: {
           type: "string"
         }
+      },
+      picture: {
+        type: "string"
       },
       filename: {
         type: "string"

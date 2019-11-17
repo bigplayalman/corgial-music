@@ -4,7 +4,6 @@ import SoundAudioPlayer from "soundcloud-audio";
 import { Controls } from "./Controls";
 import * as Database from "../Database";
 import { RxDatabase } from "rxdb";
-import * as base64 from "base-64";
 
 interface PlayerState {
   trackTitle: string;
@@ -51,8 +50,7 @@ export default class Player extends Component {
     if (!song) {
       return;
     }
-
-    const streamUrl = await fetch(`http://localhost:3300/api/download?filename=${song.filename}`, {
+    const streamUrl = await fetch(`${process.env.REACT_APP_API}/download?filename=${song.filename}`, {
       method: "GET"
     }).then((res) => {
       return res.text();

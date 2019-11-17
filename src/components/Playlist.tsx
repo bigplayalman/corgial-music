@@ -39,7 +39,7 @@ export default class Playlist extends Component {
     if (playlist) {
       this.sub = playlist.$.subscribe((_change) => {
         if (playlist.songs && playlist.songs.length) {
-          this.setState({ids: playlist.songs}, () => {
+          this.setState({ ids: playlist.songs }, () => {
             this.fetchSongs(playlist);
           });
         }
@@ -71,6 +71,7 @@ export default class Playlist extends Component {
               }}
               key={song.id}
               onClick={() => this.selectSong(song.id)}>
+              {song.picture && <img src={`https://${song.picture}`} alt="Album Art"/>}
               {song.title}
             </div>
           );
