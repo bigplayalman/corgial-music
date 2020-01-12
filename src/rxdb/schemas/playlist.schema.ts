@@ -7,7 +7,7 @@ export interface PlaylistProps {
   songs: string [];
 }
 
-export const playlist: RxJsonSchema<PlaylistProps> = {
+export const playlistSchema: RxJsonSchema<PlaylistProps> = {
   version: 0,
     type: "object",
     properties: {

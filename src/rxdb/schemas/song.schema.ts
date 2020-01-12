@@ -14,7 +14,7 @@ export interface SongProps {
   picture: string;
   playlists?: string [];
 }
-export const song: RxJsonSchema<SongProps> = {
+export const songSchema: RxJsonSchema<SongProps> = {
   version: 0,
     type: "object",
     properties: {

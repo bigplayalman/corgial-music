@@ -1,37 +1,39 @@
-import React, { Component } from "react";
-import * as Database from "./Database";
-import { FileUpload } from "./FileUpload";
-import Playlist from "./components/Playlist";
-import Player from "./components/Player";
-import Playlists from "./components/Playlists";
-import Delete from "./components/Delete";
+import React, { useState, useEffect } from "react";
+import { Pane, Spinner } from "evergreen-ui";
+import CorgialStore from "./corgial.store";
+import { CorgialProvider } from "./Corgial.Context";
+import { useRoutes } from "hookrouter";
+import { routes } from "./router/routes";
+import { Navigation } from "./components/sidebar/Navigation";
+import "./styles.scss";
 
-export default class App extends Component {
-  state = {
-    dbReady: false
-  };
+const App: React.FC<{}> = () => {
 
-  componentDidMount() {
-    this.setupDB();
+  const [store, setStore] = useState<CorgialStore>();
+  const routeResult = useRoutes(routes);
+
+  useEffect(() => {
+    setStore(new CorgialStore());
+  }, []);
+
+  if (!store) {
+    return <Spinner />;
   }
 
-  async setupDB() {
-    await Database.get();
-    this.setState({ dbReady: true });
-  }
+  return (
+    <CorgialProvider value={store}>
+      <Pane background="tint2" display="grid" gridTemplateRows="1fr 80px" height="100vh">
+        <Pane display="grid" gridTemplateColumns="200px 1fr">
+          <Navigation />
+          {routeResult || <Pane background="overlay" />}
+        </Pane>
+        <Pane background="greenTint">
+          bottom
+        </Pane>
+      </Pane>
 
-  render() {
-    if (!this.state.dbReady) {
-      return <div>Loading...</div>;
-    }
-    return (
-      <div className="App">
-        <FileUpload />
-        <Playlists />
-        <Playlist />
-        <Player />
-        <Delete />
-      </div>
-    );
-  }
-}
+    </CorgialProvider>
+  );
+};
+
+export default App;

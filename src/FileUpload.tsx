@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import * as mm from "music-metadata-browser";
-import * as Database from "./Database";
 import { v4 } from "uuid";
 import Uppy from "@uppy/core";
 import { Dashboard } from "@uppy/react";
@@ -53,12 +52,11 @@ export class FileUpload extends Component {
     if (!title) {
       title = name;
     }
-    const db = await Database.get();
-    const song = await db.songs.atomicUpsert({
-      id, title, artists, genre, album, tags: [],
-      favorite: false, skipped: 0, played: 0, playlists: ["all"],
-      filename: name
-    });
+    // const song = await db.songs.atomicUpsert({
+    //   id, title, artists, genre, album, tags: [],
+    //   favorite: false, skipped: 0, played: 0, playlists: ["all"],
+    //   filename: name
+    // });
     if (picture && picture.length) {
       const pictureName = await this.savePicture(picture[0], name);
       const pictureUrl = await fetch(`${process.env.REACT_APP_API}/download?filename=${pictureName}`, {
@@ -66,7 +64,7 @@ export class FileUpload extends Component {
       }).then((res) => {
         return res.text();
       });
-      await song.atomicSet("picture", pictureUrl);
+      // await song.atomicSet("picture", pictureUrl);
       console.log(pictureUrl);
     }
   }
@@ -87,23 +85,23 @@ export class FileUpload extends Component {
   }
 
   async subDB() {
-    const db = await Database.get();
-    let playlist = await db.playlists.findOne("all").exec();
-    if (!playlist) {
-      playlist = await db.playlists.insert({ id: "all", name: "All", count: 0, songs: [] });
-    }
 
-    this.insertSong = db.songs.insert$.subscribe(async (event) => {
-      if (playlist) {
-        const songs = playlist.songs;
-        songs.push(event.data.doc);
-        await playlist.atomicUpdate((data) => {
-          data.songs = songs;
-          data.count = songs.length;
-          return data;
-        });
-      }
-    });
+    // let playlist = await db.playlists.findOne("all").exec();
+    // if (!playlist) {
+    //   playlist = await db.playlists.insert({ id: "all", name: "All", count: 0, songs: [] });
+    // }
+
+    // this.insertSong = db.songs.insert$.subscribe(async (event) => {
+    //   if (playlist) {
+    //     const songs = playlist.songs;
+    //     songs.push(event.data.doc);
+    //     await playlist.atomicUpdate((data) => {
+    //       data.songs = songs;
+    //       data.count = songs.length;
+    //       return data;
+    //     });
+    //   }
+    // });
   }
 
   render() {

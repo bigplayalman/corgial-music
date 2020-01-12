@@ -10,7 +10,7 @@ const _create = () => {
     debug: true,
     restrictions: {
       maxNumberOfFiles: 10,
-      allowedFileTypes: [".mp3", ".flac"]
+      allowedFileTypes: [".mp3"]
     }
   });
   upload.use(AwsS3, {

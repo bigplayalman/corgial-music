@@ -1,2 +1,2 @@
-export { song } from "./song.schema";
-export { playlist } from "./playlist.schema";
+export { songSchema } from "./song.schema";
+export { playlistSchema } from "./playlist.schema";

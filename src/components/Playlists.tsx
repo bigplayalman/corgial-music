@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import * as Database from "../Database";
+// import * as Database from "../Database";
 import { PlaylistProps } from "../rxdb/schemas/playlist.schema";
 import { Subscription } from "rxjs";
 import { RxDatabase } from "rxdb";
@@ -8,7 +8,7 @@ interface IState {
   playlists: PlaylistProps[];
 }
 export default class Playlists extends Component<any, IState> {
-  db!: RxDatabase<Database.DatabaseCollections>;
+  // db!: RxDatabase<Database.DatabaseCollections>;
   sub!: Subscription;
   state: IState = {
     playlists: []
@@ -19,19 +19,19 @@ export default class Playlists extends Component<any, IState> {
   }
 
   async initialize() {
-    this.db = await Database.get();
-    this.sub = this.db.playlists.$.subscribe((_change) => {
-      this.fetchPlaylists();
-    });
+    // this.db = await Database.get();
+    // this.sub = this.db.playlists.$.subscribe((_change) => {
+    //   this.fetchPlaylists();
+    // });
   }
 
   async fetchPlaylists() {
-    const playlists = await this.db.playlists.find({ name: { $exists: true } }).exec();
-    this.setState({ playlists });
+    // const playlists = await this.db.playlists.find({ name: { $exists: true } }).exec();
+    // this.setState({ playlists });
   }
 
   async selectPlaylist(playlist: PlaylistProps) {
-    await this.db.playlists.upsertLocal("current", { playlist: playlist.id });
+    // await this.db.playlists.upsertLocal("current", { playlist: playlist.id });
   }
 
   render() {

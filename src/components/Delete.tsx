@@ -1,12 +1,12 @@
 import React from "react";
-import * as Database from "../Database";
+// import * as Database from "../Database";
 
 const Delete = () => {
 
   const deleteFiles = async () => {
-    const db = await Database.get();
-    await db.songs.find().remove();
-    await db.playlists.find().remove();
+    // const db = await Database.get();
+    // await db.songs.find().remove();
+    // await db.playlists.find().remove();
   };
 
   return (
