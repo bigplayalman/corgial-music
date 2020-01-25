@@ -1,22 +1,3 @@
-.Upload {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr 40px;
-  text-align: left;
-}
-
-.Content {
-  display: flex;
-  flex-direction: column;
-  .Dropzone {
-    flex: 1;
-  }
-  .Files {
-    flex: 1;
-    overflow-y: auto;
-  }
-}
 
 .Actions {
   display: flex;

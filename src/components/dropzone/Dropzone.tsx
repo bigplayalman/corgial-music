@@ -1,4 +1,4 @@
-import React, {createRef, useState } from "react";
+import React, { createRef, useState } from "react";
 import "./dropzone.scss";
 
 export interface DropzoneProps {
@@ -6,11 +6,10 @@ export interface DropzoneProps {
   onFilesEvent: (files: File[]) => void;
 }
 
-export const Dropzone: React.FC<DropzoneProps> = ({disabled, onFilesEvent}) => {
+export const Dropzone: React.FC<DropzoneProps> = ({ disabled, onFilesEvent }) => {
   const fileInputRef = createRef<any>();
   const [hightlight, setHighlight] = useState<boolean>(false);
   const openFileDialog = () => {
-    console.log("clicked");
     if (disabled) {
       return;
     }
@@ -77,6 +76,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({disabled, onFilesEvent}) => {
         ref={fileInputRef}
         className="FileInput"
         type="file"
+        accept="audio/*"
         multiple
         onChange={onFilesAdded}
       />
@@ -85,7 +85,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({disabled, onFilesEvent}) => {
         className="Icon"
         src="baseline-cloud_upload-24px.svg"
       /> */}
-      <span>Drag and Drop Files or click to show dialog</span>
+      <span>Drag and Drop Files or Click to Show Dialog</span>
     </div>
   );
 };

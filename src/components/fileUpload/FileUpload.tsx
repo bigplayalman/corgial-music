@@ -7,6 +7,7 @@ import { Dropzone } from "../dropzone/Dropzone";
 import "./fileUpload.scss";
 import { FileUploadActions, IFileUploadActions } from "./FileUpload.actions";
 import { FileUploadList } from "./FileUpload.list";
+import { Pane } from "evergreen-ui";
 
 export const FileUpload: React.FC = () => {
 
@@ -66,7 +67,6 @@ export const FileUpload: React.FC = () => {
   };
 
   const fileUploadActionProps: IFileUploadActions = {
-    successfullUploaded,
     setSuccessfullUploaded,
     files,
     setFiles,
@@ -75,16 +75,21 @@ export const FileUpload: React.FC = () => {
   };
 
   return (
-    <div className="Upload">
-      <div className="Content">
+    <Pane
+      flex={1}
+      display="grid"
+      gridTemplateColumns="1fr"
+      gridTemplateRows="1fr 40px"
+    >
+      <Pane display="flex" flexDirection="column">
         <Dropzone
           onFilesEvent={onFilesAdded}
           disabled={uploading || successfullUploaded}
         />
         <FileUploadList files={files} />
-      </div>
+      </Pane>
       <FileUploadActions {...fileUploadActionProps} />
-    </div>
+    </Pane>
   );
 };
 
