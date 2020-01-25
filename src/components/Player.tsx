@@ -3,7 +3,6 @@ import { Subscription } from "rxjs";
 import SoundAudioPlayer from "soundcloud-audio";
 // import * as Database from "../Database";
 import { RxDatabase } from "rxdb";
-import ReactPlayer from "react-player";
 
 interface PlayerState {
   trackTitle: string;
@@ -91,7 +90,7 @@ export default class Player extends Component {
   render() {
     return (
       <div>
-        {this.state.current && <ReactPlayer file={{ forceAudio: true, forceDASH: true }} url={this.state.current} playing />}
+       player
       </div>
     );
   }
