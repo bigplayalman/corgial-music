@@ -1,4 +1,5 @@
 import React from "react";
+import { Button, Pane } from "evergreen-ui";
 
 export interface IFileUploadActions {
   setFiles: (files: File[]) => void;
@@ -21,8 +22,10 @@ export const FileUploadActions: React.FC<IFileUploadActions> = (
     return <div />;
   }
   return (
-    <div className="Actions">
-      <button
+    <Pane>
+      <Button
+        marginRight={16}
+        height={40}
         onClick={
           () => {
             setFiles([]);
@@ -31,13 +34,14 @@ export const FileUploadActions: React.FC<IFileUploadActions> = (
         }
       >
         Clear
-      </button>
-      <button
+      </Button>
+      <Button
+        height={40}
         disabled={files.length < 0 || uploading}
         onClick={uploadFiles}
       >
         Upload
-      </button>
-    </div>
+      </Button>
+    </Pane>
   );
 };

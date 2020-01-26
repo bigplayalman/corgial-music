@@ -22,7 +22,7 @@ const App: React.FC<{}> = () => {
 
   return (
     <CorgialProvider value={store}>
-      <Pane background="tint2" display="grid" gridTemplateRows="1fr 80px" height="100vh">
+      <Pane background="tint2" display="grid" gridTemplateRows="1fr 80px" height="100%">
         <Pane display="grid" gridTemplateColumns="200px 1fr">
           <Navigation />
           {routeResult || <Pane background="overlay" />}

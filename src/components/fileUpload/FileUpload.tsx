@@ -8,12 +8,13 @@ import "./fileUpload.scss";
 import { FileUploadActions, IFileUploadActions } from "./FileUpload.actions";
 import { FileUploadList } from "./FileUpload.list";
 import { Pane } from "evergreen-ui";
+import { FileUploadProgress } from "./FileUpload.progress";
 
 export const FileUpload: React.FC = () => {
 
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState<boolean>(false);
-  const [uploadProgress, setUploadProgress] = useState<{ [x: string]: { state: string; percentage: number } }>({});
+  const [uploadProgress, setUploadProgress] = useState<{ done: string[], error: string[] }>({done: [], error: []});
   const [successfullUploaded, setSuccessfullUploaded] = useState<boolean>(false);
 
   const onFilesAdded = (payload: File[]) => {
@@ -23,7 +24,7 @@ export const FileUpload: React.FC = () => {
 
   const uploadFiles = async () => {
     setUploading(true);
-    setUploadProgress({});
+    setUploadProgress({done: [], error: []});
     const promises: Promise<XMLHttpRequest>[] = [];
     files.forEach(file => {
       promises.push(sendRequest(file));
@@ -32,8 +33,10 @@ export const FileUpload: React.FC = () => {
       for (const promise of promises) {
         await promise;
       }
+      console.log("all done");
       setSuccessfullUploaded(true);
-      setUploading(true);
+      setUploading(false);
+      setFiles([]);
     } catch (e) {
       setSuccessfullUploaded(true);
       setUploading(false);
@@ -46,17 +49,16 @@ export const FileUpload: React.FC = () => {
       formData.append("file", file, file.name);
       const req = new XMLHttpRequest();
 
-      req.upload.addEventListener("load", (event: ProgressEvent) => {
+      req.upload.addEventListener("load", (_event: ProgressEvent) => {
         const copy = { ...uploadProgress };
-        copy[file.name] = { state: "done", percentage: 100 };
+        copy.done.push(file.name);
         setUploadProgress(copy);
-        console.log("done");
         resolve(req.response);
       });
 
-      req.upload.addEventListener("error", (event: ProgressEvent) => {
+      req.upload.addEventListener("error", (_event: ProgressEvent) => {
         const copy = { ...uploadProgress };
-        copy[file.name] = { state: "error", percentage: 0 };
+        copy.error.push(file.name);
         setUploadProgress(copy);
         reject(req.response);
       });
@@ -78,16 +80,15 @@ export const FileUpload: React.FC = () => {
     <Pane
       flex={1}
       display="grid"
+      margin={24}
       gridTemplateColumns="1fr"
-      gridTemplateRows="1fr 40px"
     >
-      <Pane display="flex" flexDirection="column">
-        <Dropzone
-          onFilesEvent={onFilesAdded}
-          disabled={uploading || successfullUploaded}
-        />
-        <FileUploadList files={files} />
-      </Pane>
+      <Dropzone
+        onFilesEvent={onFilesAdded}
+        disabled={uploading || successfullUploaded}
+      />
+      <FileUploadList files={files} />
+      <FileUploadProgress files={files} uploading={uploading} uploadProgress={uploadProgress}/>
       <FileUploadActions {...fileUploadActionProps} />
     </Pane>
   );
