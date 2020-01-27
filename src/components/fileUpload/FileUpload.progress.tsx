@@ -1,23 +1,38 @@
-import React, { Fragment } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Pane } from "evergreen-ui";
+import CorgialContext from "../../Corgial.Context";
 
 export interface IFileUploadProgress {
   files: File[];
-  uploading: boolean;
-  uploadProgress: { done: string[], error: string[] };
 }
 
-export const FileUploadProgress: React.FC<IFileUploadProgress> = ({ files, uploadProgress, uploading }) => {
-  if (!uploading) {
-    return <Fragment />;
-  }
-  console.log(uploadProgress);
+export const FileUploadProgress: React.FC<IFileUploadProgress> = ({ files }) => {
+  const context = useContext(CorgialContext);
+  const [uploadProgress, setUploadProgress] = useState<string[]>([]);
+  useEffect(() => {
+    const sub = context.events.subscribe((event) => {
+      if (event.type === "FILES_PROGRESS") {
+        switch (event.payload) {
+          case "reset": setUploadProgress([]); break;
+          case "add": {
+            const progress = uploadProgress.concat(event.payload);
+            setUploadProgress(progress);
+          }
+        }
+      }
+    });
+
+    return () => {
+      sub.unsubscribe();
+    };
+
+  }, [context, uploadProgress]);
   return (
-    <Pane background="overlay" margin={24} display="block" height={20} width="100%" alignItems="stretch">
+    <Pane background="overlay" margin={24} display="flex" height={20} width="100%" alignItems="stretch">
       {
-        uploadProgress.done.map((value) => {
+        uploadProgress.map((value, index) => {
           return (
-            <Pane key={value} background="greenTint" width={`${100 / files.length}%`} height="100%" />
+            <Pane key={value + index} background="greenTint" width={`${100 / files.length}%`} />
           );
         })
       }

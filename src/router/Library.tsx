@@ -14,7 +14,7 @@ export const Library: React.FC<{}> = () => {
       setSongs(music);
     };
     fetchSongs();
-  }, [context.db.songs]);
+  }, [context]);
 
   return (
     <Pane>

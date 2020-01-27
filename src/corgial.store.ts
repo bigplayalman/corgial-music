@@ -2,6 +2,8 @@ import RxDB, { RxDatabase, RxCollection } from "rxdb";
 import PouchAdapterMemory from "pouchdb-adapter-memory";
 import PouchAdapterHttp from "pouchdb-adapter-http";
 import { Subject, Subscription, from, BehaviorSubject } from "rxjs";
+import { first } from "rxjs/operators";
+import { ajax } from "rxjs/ajax";
 import * as mm from "music-metadata-browser";
 import { v4 } from "uuid";
 import { IPicture } from "music-metadata/lib/type";
@@ -58,6 +60,14 @@ export default class CorgialStore {
           this.status.next("ready");
           break;
         }
+        case "FILE_UPLOADED": {
+          console.log("file", event.payload);
+          break;
+        }
+        case "FILE_FAILED": {
+          console.log("failed", event.payload);
+          break;
+        }
         default: break;
       }
     });
@@ -97,7 +107,7 @@ export default class CorgialStore {
       playlists: []
     };
     await this.db.songs.atomicUpsert(payload);
-    console.log("added to db");
+    this.events.next({ type: "FILES_PROGRESS", payload: "add" });
   }
 
   async savePicture(id: string, picture: IPicture) {
@@ -106,5 +116,23 @@ export default class CorgialStore {
     const url = URL.createObjectURL(blob);
     console.log(name, url);
     return name;
+  }
+
+  uploadFiles(files: File[]) {
+    this.events.next({ type: "FILES_PROGRESS", payload: "reset" });
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      const request$ = ajax({
+        method: "POST",
+        url: "http://localhost:3300/api/upload",
+        body: formData
+      });
+      request$.pipe(first()).subscribe((response) => {
+        if (response.status === 200) {
+          this.saveDetails(file);
+        }
+      });
+    }
   }
 }

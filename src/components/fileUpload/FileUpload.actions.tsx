@@ -3,18 +3,14 @@ import { Button, Pane } from "evergreen-ui";
 
 export interface IFileUploadActions {
   setFiles: (files: File[]) => void;
-  setSuccessfullUploaded: (status: boolean) => void;
   files: File[];
-  uploading: boolean;
   uploadFiles: () => void;
 }
 
 export const FileUploadActions: React.FC<IFileUploadActions> = (
   {
     setFiles,
-    setSuccessfullUploaded,
     files,
-    uploading,
     uploadFiles
   }
 ) => {
@@ -29,7 +25,7 @@ export const FileUploadActions: React.FC<IFileUploadActions> = (
         onClick={
           () => {
             setFiles([]);
-            setSuccessfullUploaded(false);
+            // setSuccessfullUploaded(false);
           }
         }
       >
@@ -37,7 +33,7 @@ export const FileUploadActions: React.FC<IFileUploadActions> = (
       </Button>
       <Button
         height={40}
-        disabled={files.length < 0 || uploading}
+        // disabled={files.length < 0 || uploading}
         onClick={uploadFiles}
       >
         Upload

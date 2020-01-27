@@ -2,24 +2,23 @@ import React, { createRef, useState } from "react";
 import "./dropzone.scss";
 
 export interface DropzoneProps {
-  disabled: boolean;
   onFilesEvent: (files: File[]) => void;
 }
 
-export const Dropzone: React.FC<DropzoneProps> = ({ disabled, onFilesEvent }) => {
+export const Dropzone: React.FC<DropzoneProps> = ({ onFilesEvent }) => {
   const fileInputRef = createRef<any>();
   const [hightlight, setHighlight] = useState<boolean>(false);
   const openFileDialog = () => {
-    if (disabled) {
-      return;
-    }
+    // if (disabled) {
+    //   return;
+    // }
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
   const onFilesAdded = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return;
+    // if (disabled) return;
     const files = evt.target.files;
     if (onFilesEvent && files) {
       const array = fileListToArray(files);
@@ -30,7 +29,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({ disabled, onFilesEvent }) =>
   const onDragOver = (evt: React.DragEvent<HTMLDivElement>) => {
     evt.preventDefault();
 
-    if (disabled) return;
+    // if (disabled) return;
 
     setHighlight(false);
   };
@@ -42,7 +41,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({ disabled, onFilesEvent }) =>
   const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
 
-    if (disabled) return;
+    // if (disabled) return;
 
     const files = event.dataTransfer.files;
     if (onFilesEvent) {
@@ -70,7 +69,8 @@ export const Dropzone: React.FC<DropzoneProps> = ({ disabled, onFilesEvent }) =>
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onClick={openFileDialog}
-      style={{ cursor: disabled ? "default" : "pointer" }}
+      style={{ cursor: "pointer" }}
+      // style={{ cursor: disabled ? "default" : "pointer" }}
     >
       <input
         ref={fileInputRef}
