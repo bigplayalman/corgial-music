@@ -1734,6 +1734,13 @@
   dependencies:
     "@types/pouchdb-core" "*"
 
+"@types/pouchdb-adapter-idb@^6.1.3":
+  version "6.1.3"
+  resolved "https://registry.yarnpkg.com/@types/pouchdb-adapter-idb/-/pouchdb-adapter-idb-6.1.3.tgz#0d7cc70c0b0e5317c84b965c87e0c0034c0c2ddd"
+  integrity sha512-K4G9pmHkR2JyL8d6cllIEix2dtQFVIJyDcgoT7ctrbIyyhT4kRjieGc3O7tzIhm1bv7W2qz1aResO9lq7qjKVQ==
+  dependencies:
+    "@types/pouchdb-core" "*"
+
 "@types/pouchdb-adapter-memory@^6.1.3":
   version "6.1.3"
   resolved "https://registry.yarnpkg.com/@types/pouchdb-adapter-memory/-/pouchdb-adapter-memory-6.1.3.tgz#9eabdbc890fcf58960ee8b68b8685f837e75c844"
@@ -9731,6 +9738,19 @@ pouchdb-adapter-http@^7.1.1:
     pouchdb-binary-utils "7.1.1"
     pouchdb-errors "7.1.1"
     pouchdb-fetch "7.1.1"
+    pouchdb-utils "7.1.1"
+
+pouchdb-adapter-idb@^7.1.1:
+  version "7.1.1"
+  resolved "https://registry.yarnpkg.com/pouchdb-adapter-idb/-/pouchdb-adapter-idb-7.1.1.tgz#1c62edc4a0f5713422daa488ddcdcc5bfe68d130"
+  integrity sha512-GtJhxg1i8waNX11fpibUOcgK0BoDm9ad+R4/mIP05OU7H6P77EVqlWyuJ+i3H0A5Vpwhndcmkpn45LbStTfepQ==
+  dependencies:
+    pouchdb-adapter-utils "7.1.1"
+    pouchdb-binary-utils "7.1.1"
+    pouchdb-collections "7.1.1"
+    pouchdb-errors "7.1.1"
+    pouchdb-json "7.1.1"
+    pouchdb-merge "7.1.1"
     pouchdb-utils "7.1.1"
 
 pouchdb-adapter-leveldb-core@7.1.1:

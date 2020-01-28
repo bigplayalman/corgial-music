@@ -1,6 +1,7 @@
 import RxDB, { RxDatabase, RxCollection } from "rxdb";
 import PouchAdapterMemory from "pouchdb-adapter-memory";
 import PouchAdapterHttp from "pouchdb-adapter-http";
+import PouchAdapterIdb from "pouchdb-adapter-idb";
 import { Subject, Subscription, from, BehaviorSubject } from "rxjs";
 import { first } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
@@ -12,6 +13,7 @@ import { SongProps, songSchema } from "./rxdb/schemas/song.schema";
 import { PlaylistProps, playlistSchema } from "./rxdb/schemas/playlist.schema";
 
 RxDB.plugin(PouchAdapterMemory);
+RxDB.plugin(PouchAdapterIdb);
 RxDB.plugin(PouchAdapterHttp);
 
 export interface DatabaseCollections {
@@ -34,13 +36,12 @@ export default class CorgialStore {
     this.status = new BehaviorSubject("initialized");
     this.events = new Subject<CorgialEvent>();
     this.reducer();
-    this.initialize();
   }
 
   initialize() {
     this.dbSub = from(RxDB.create<DatabaseCollections>({
       name: "corgial",
-      adapter: "memory",
+      adapter: "idb",
       multiInstance: false,
       queryChangeDetection: true
     })).subscribe((db) => {
@@ -57,6 +58,10 @@ export default class CorgialStore {
           break;
         }
         case "DB_COLLECTIONS_CREATED": {
+          this.initializeCollections();
+          break;
+        }
+        case "DB_SETUP": {
           this.status.next("ready");
           break;
         }
@@ -77,6 +82,14 @@ export default class CorgialStore {
     await this.db.collection({ name: "songs", schema: songSchema });
     await this.db.collection({ name: "playlists", schema: playlistSchema });
     this.events.next({ type: "DB_COLLECTIONS_CREATED", payload: true });
+  }
+
+  async initializeCollections() {
+    const playlists = await this.db.playlists.find().exec();
+    if (!playlists.length) {
+      await this.db.playlists.atomicUpsert({name: "Last Added", songs: []});
+    }
+    this.events.next({ type: "DB_SETUP", payload: true });
   }
 
   async saveDetails(file: File) {

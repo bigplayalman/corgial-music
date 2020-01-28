@@ -13,7 +13,17 @@ const App: React.FC<{}> = () => {
   const routeResult = useRoutes(routes);
 
   useEffect(() => {
-    setStore(new CorgialStore());
+    const corgial = new CorgialStore();
+    const sub = corgial.status.subscribe((event) => {
+      if (event === "ready") {
+        setStore(corgial);
+      }
+    });
+
+    corgial.initialize();
+    return () => {
+      sub.unsubscribe();
+    };
   }, []);
 
   if (!store) {

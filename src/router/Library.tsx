@@ -10,8 +10,10 @@ export const Library: React.FC<{}> = () => {
 
   useEffect(() => {
     const fetchSongs = async () => {
-      const music = await context.db.songs.find().exec();
-      setSongs(music);
+      if (context.db) {
+        const music = await context.db.songs.find().exec();
+        setSongs(music);
+      }
     };
     fetchSongs();
   }, [context]);
