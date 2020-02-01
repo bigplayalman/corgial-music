@@ -69,8 +69,8 @@ export default class Playlist extends Component {
                 margin: 10,
                 border: "1px solid blue"
               }}
-              key={song.id}
-              onClick={() => this.selectSong(song.id)}>
+              key={song._id}
+              onClick={() => this.selectSong(song._id as string)}>
               {song.picture && <img src={`https://${song.picture}`} alt="Album Art"/>}
               {song.title}
             </div>

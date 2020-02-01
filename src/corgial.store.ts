@@ -6,7 +6,6 @@ import { Subject, Subscription, from, BehaviorSubject } from "rxjs";
 import { first } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import * as mm from "music-metadata-browser";
-import { v4 } from "uuid";
 import { IPicture } from "music-metadata/lib/type";
 
 import { SongProps, songSchema } from "./rxdb/schemas/song.schema";
@@ -85,28 +84,19 @@ export default class CorgialStore {
   }
 
   async initializeCollections() {
-    const playlists = await this.db.playlists.find().exec();
-    if (!playlists.length) {
-      await this.db.playlists.atomicUpsert({name: "Last Added", songs: []});
-    }
     this.events.next({ type: "DB_SETUP", payload: true });
   }
 
   async saveDetails(file: File) {
     const metadata = await mm.parseBlob(file);
-    const id = v4();
     let title = metadata.common.title;
-    const { artists, genre, album, picture } = metadata.common;
-    let pictureUrl: string = "";
+    const { artists, genre, album } = metadata.common;
     if (!title) {
       title = file.name;
     }
-    if (picture && picture.length) {
-      pictureUrl = await this.savePicture(id, picture[0]);
-    }
 
     const payload: SongProps = {
-      id,
+      cid: title + Date.now(),
       title,
       genre,
       album,
@@ -116,8 +106,8 @@ export default class CorgialStore {
       skipped: 0,
       played: 0,
       filename: file.name,
-      picture: pictureUrl,
-      playlists: []
+      playlists: [],
+      dateAdded: Date.now()
     };
     await this.db.songs.atomicUpsert(payload);
     this.events.next({ type: "FILES_PROGRESS", payload: "add" });
