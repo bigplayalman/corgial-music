@@ -1,51 +1,46 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Pane, Heading, Text } from "evergreen-ui";
-import { SongProps } from "../rxdb/schemas/song.schema";
+import { Pane, Heading } from "evergreen-ui";
 import { RxDocument } from "rxdb";
 import CorgialContext from "../Corgial.Context";
-import defaultImage from "../svgs/defaultImage.svg";
+import { PlaylistProps } from "../rxdb/schemas/playlist.schema";
 
 export const Library: React.FC<{}> = () => {
   const context = useContext(CorgialContext);
-  const [songs, setSongs] = useState<RxDocument<SongProps>[]>([]);
+  const [playlists, setPlaylists] = useState<RxDocument<PlaylistProps>[]>([]);
 
   useEffect(() => {
-    const fetchSongs = async () => {
+    const fetchPlaylists = async () => {
       if (context.db) {
-        const music = await context.db.songs.find().sort("dateAdded").exec();
-        setSongs(music);
+        const dbplaylists = await context.db.playlists.find().exec();
+        setPlaylists(dbplaylists);
       }
     };
-    fetchSongs();
+    fetchPlaylists();
   }, [context]);
 
   return (
-    <Pane>
+    <Pane
+      display="grid"
+      gridAutoColumns=".25fr"
+      gridAutoRows="100px"
+    >
+      <Pane
+        border="default"
+        padding={16}
+        margin={16}
+      >
+        <Heading size={500}>Last Added</Heading>
+      </Pane>
       {
-        songs.map((song) => {
+        playlists.map((playlist) => {
           return (
             <Pane
-              key={song.cid}
-              display="grid"
-              gridTemplateColumns="80px 1fr"
-              gridAutoRows="60px"
+              key={playlist.cid}
               border="default"
               padding={16}
               margin={16}
             >
-              <Pane>
-                <img alt="album art" src={song.picture || defaultImage} className="responsive" />
-              </Pane>
-              <Pane paddingLeft={8}>
-                <Heading size={400} marginTop={0}>
-                  {song.title}
-                </Heading>
-                <Text>
-                  {
-                    song.artists && song.artists.map((artist) => `${artist} `)
-                  }
-                </Text>
-              </Pane>
+              <Heading size={500}>{playlist.name}</Heading>
             </Pane>
           );
         })

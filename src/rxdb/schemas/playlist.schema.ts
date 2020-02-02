@@ -1,9 +1,8 @@
 import {RxJsonSchema} from "rxdb";
 
 export interface PlaylistProps {
-  id: string;
+  cid: string;
   name: string;
-  count: number;
   songs: string [];
 }
 
@@ -11,16 +10,12 @@ export const playlistSchema: RxJsonSchema<PlaylistProps> = {
   version: 0,
     type: "object",
     properties: {
-      id: {
+      cid: {
         type: "string",
         primary: true
       },
       name: {
         type: "string"
-      },
-      count: {
-        type: "number",
-        default: 0,
       },
       songs: {
         type: "array",
