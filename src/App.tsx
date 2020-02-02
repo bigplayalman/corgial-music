@@ -37,7 +37,7 @@ const App: React.FC<{}> = () => {
           <Navigation />
           {routeResult || <Pane background="overlay" />}
         </Pane>
-        <Pane background="greenTint">
+        <Pane background="greenTint" boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)" position="relative" zIndex="11">
           bottom
         </Pane>
       </Pane>

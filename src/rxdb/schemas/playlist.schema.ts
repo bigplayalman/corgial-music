@@ -2,7 +2,7 @@ import {RxJsonSchema} from "rxdb";
 
 export interface PlaylistProps {
   cid: string;
-  name: string;
+  title: string;
   songs: string [];
 }
 
@@ -14,8 +14,9 @@ export const playlistSchema: RxJsonSchema<PlaylistProps> = {
         type: "string",
         primary: true
       },
-      name: {
-        type: "string"
+      title: {
+        type: "string",
+        index: true
       },
       songs: {
         type: "array",
