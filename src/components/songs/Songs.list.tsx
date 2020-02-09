@@ -1,45 +1,26 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Pane, Heading, IconButton } from "evergreen-ui";
+import { Pane, Heading } from "evergreen-ui";
 import { RxDocument } from "rxdb";
 import CorgialContext from "../../Corgial.Context";
 import { SongProps } from "../../rxdb/schemas/song.schema";
-import { PlaylistProps } from "../../rxdb/schemas/playlist.schema";
 
-export interface ISongList {
-  cid?: string;
-}
-
-export const SongsList: React.FC<ISongList> = ({ cid }) => {
+export const SongsList: React.FC = () => {
   const context = useContext(CorgialContext);
-  const [playlist, setPlaylist] = useState<Partial<PlaylistProps>>({ title: "Last Added Songs" });
-  const [songs, setSongs] = useState<RxDocument<SongProps>[]>([]);
+  const [queue, setQueue] = useState<RxDocument<SongProps>[]>([]);
+  const [playlist, setPlaylist] = useState<{ title: string }>();
 
   useEffect(() => {
-    const fetchSongs = async () => {
-      if (context.db) {
-        const dbsongs =
-          cid ?
-            await context.db.songs.find().where("playlists").elemMatch(cid).exec()
-            :
-            await context.db.songs.find().exec();
-        setSongs(dbsongs);
+    const sub = context.events.subscribe((event) => {
+      switch (event.type) {
+        case "SET_QUEUE": setQueue(event.payload as RxDocument<SongProps>[]); break;
+        case "LAST_ADDED": setPlaylist({ title: "Last Added" }); break;
+        case "SET_PLAYLIST": setPlaylist(event.payload); break;
       }
+    });
+    return () => {
+      sub.unsubscribe();
     };
-
-    const fetchPlaylist = async () => {
-      if (context.db && cid) {
-        const dbplaylist = await context.db.playlists.findOne(cid).exec();
-        if (dbplaylist) {
-          const dbsongs = await dbplaylist.populate("songs") as RxDocument<SongProps>[];
-          setSongs(dbsongs);
-          setPlaylist(dbplaylist);
-        }
-      }
-    };
-
-    fetchSongs();
-    fetchPlaylist();
-  }, [context, playlist, cid]);
+  }, [context]);
 
   const selectSong = (id: string) => {
     if (id === "last") {
@@ -53,21 +34,19 @@ export const SongsList: React.FC<ISongList> = ({ cid }) => {
       display="grid"
       gridAutoColumns="1fr"
       gridAutoRows="70px"
-      boxShadow="1px 0px 2px rgba(0, 0, 0, 0.25)"
     >
       <Pane
         display="flex"
-        boxShadow="0px 1px 2px rgba(0, 0, 0, 0.25)"
         justifyContent="space-between"
         alignItems="center"
         padding={16}
       >
         <Heading size={600}>
-          {playlist.title}
+          {playlist && playlist.title}
         </Heading>
       </Pane>
       {
-        songs.map((song) => {
+        queue.map((song) => {
           return (
             <Pane
               key={song.cid}
@@ -76,7 +55,6 @@ export const SongsList: React.FC<ISongList> = ({ cid }) => {
               justifyContent="space-between"
               alignItems="center"
               padding={8}
-              margin={8}
               onClick={() => selectSong(song.cid)}
             >
               <Heading size={500}>{song.title}</Heading>

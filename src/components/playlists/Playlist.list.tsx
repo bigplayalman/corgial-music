@@ -13,6 +13,7 @@ export const PlaylistList: React.FC<{}> = () => {
       if (context.db) {
         const dbplaylists = await context.db.playlists.find().exec();
         setPlaylists(dbplaylists);
+        context.events.next({ type: "LAST_ADDED", payload: true });
       }
     };
     fetchPlaylists();
@@ -20,7 +21,7 @@ export const PlaylistList: React.FC<{}> = () => {
 
   const selectPlaylist = (id: string) => {
     if (id === "last") {
-      console.log("last added");
+      context.events.next({ type: "LAST_ADDED", payload: true });
     }
   };
 
@@ -29,12 +30,14 @@ export const PlaylistList: React.FC<{}> = () => {
       display="grid"
       gridAutoColumns=".5fr"
       gridAutoRows="70px"
-      boxShadow="1px 0px 2px rgba(0, 0, 0, 0.25)"
+      boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)"
+      position="relative"
+      zIndex={8}
     >
       <Pane
         gridColumn="1 / span 2"
         display="flex"
-        boxShadow="0px 1px 2px rgba(0, 0, 0, 0.25)"
+        boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)"
         justifyContent="space-between"
         alignItems="center"
         padding={16}

@@ -29,11 +29,19 @@ export default class CorgialStore {
   db!: RxDatabase<DatabaseCollections>;
   events: Subject<CorgialEvent>;
   status!: BehaviorSubject<string>;
+  playlists!: BehaviorSubject<PlaylistProps[]>;
+  songs!: BehaviorSubject<SongProps[]>;
+  playlist!: Subject<PlaylistProps>;
+  song!: Subject<SongProps>;
   sub!: Subscription;
   dbSub!: Subscription;
   constructor() {
     this.status = new BehaviorSubject("initialized");
     this.events = new Subject<CorgialEvent>();
+    this.playlists = new BehaviorSubject<PlaylistProps[]>([]);
+    this.songs = new BehaviorSubject<SongProps[]>([]);
+    this.playlist = new Subject<PlaylistProps>();
+    this.song = new Subject<SongProps>();
     this.reducer();
   }
 
@@ -72,6 +80,10 @@ export default class CorgialStore {
           console.log("failed", event.payload);
           break;
         }
+        case "LAST_ADDED": {
+          this.fetchSongs();
+          break;
+        }
         default: break;
       }
     });
@@ -85,6 +97,11 @@ export default class CorgialStore {
 
   async initializeCollections() {
     this.events.next({ type: "DB_SETUP", payload: true });
+  }
+
+  async fetchSongs(options: any = {}) {
+    const songs = await this.db.songs.find(options).exec();
+    this.events.next({ type: "SET_QUEUE", payload: songs });
   }
 
   async saveDetails(file: File) {
