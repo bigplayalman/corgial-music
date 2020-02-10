@@ -13,15 +13,15 @@ export const PlaylistList: React.FC<{}> = () => {
       if (context.db) {
         const dbplaylists = await context.db.playlists.find().exec();
         setPlaylists(dbplaylists);
-        context.events.next({ type: "LAST_ADDED", payload: true });
       }
     };
     fetchPlaylists();
+    context.events.next({ type: "LAST_ADDED", payload: {} });
   }, [context]);
 
   const selectPlaylist = (id: string) => {
     if (id === "last") {
-      context.events.next({ type: "LAST_ADDED", payload: true });
+      context.events.next({ type: "LAST_ADDED", payload: {} });
     }
   };
 

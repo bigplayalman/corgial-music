@@ -81,12 +81,22 @@ export default class CorgialStore {
           break;
         }
         case "LAST_ADDED": {
-          this.fetchSongs();
+          this.fetchSongs(event.payload || {});
+          break;
+        }
+        case "GET_SONG": {
+          this.getSong(event.payload);
           break;
         }
         default: break;
       }
     });
+  }
+
+  async getSong(song: string) {
+    const response = await fetch(`http://localhost:3300/api/download?filename=${song}`);
+    const url = await response.text();
+    this.events.next(({type: "PLAY_SONG", payload: {url}}));
   }
 
   async createCollections() {

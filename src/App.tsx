@@ -6,6 +6,7 @@ import { useRoutes } from "hookrouter";
 import { routes } from "./router/routes";
 import { Navigation } from "./components/sidebar/Navigation";
 import "./styles.scss";
+import { Player } from "./components/player/Player";
 
 const App: React.FC<{}> = () => {
 
@@ -37,9 +38,7 @@ const App: React.FC<{}> = () => {
           <Navigation />
           {routeResult || <Pane background="overlay" />}
         </Pane>
-        <Pane background="greenTint" boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)" position="relative" zIndex={20}>
-          bottom
-        </Pane>
+        <Player />
       </Pane>
 
     </CorgialProvider>

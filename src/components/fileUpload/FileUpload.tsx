@@ -1,12 +1,11 @@
 import React, { useState, useContext } from "react";
+import { Pane } from "evergreen-ui";
 import { Dropzone } from "../dropzone/Dropzone";
-
-import "./fileUpload.scss";
 import { FileUploadActions, IFileUploadActions } from "./FileUpload.actions";
 import { FileUploadList } from "./FileUpload.list";
-import { Pane } from "evergreen-ui";
 import { FileUploadProgress } from "./FileUpload.progress";
 import CorgialContext from "../../Corgial.Context";
+import "./fileUpload.scss";
 
 export const FileUpload: React.FC = () => {
   const context = useContext(CorgialContext);
@@ -28,15 +27,8 @@ export const FileUpload: React.FC = () => {
   };
 
   return (
-    <Pane
-      flex={1}
-      display="grid"
-      margin={24}
-      gridTemplateColumns="1fr"
-    >
-      <Dropzone
-        onFilesEvent={onFilesAdded}
-      />
+    <Pane flex={1} display="grid" margin={24} gridTemplateColumns="1fr">
+      <Dropzone onFilesEvent={onFilesAdded} />
       <FileUploadList files={files} />
       <FileUploadProgress files={files} />
       <FileUploadActions {...fileUploadActionProps} />
