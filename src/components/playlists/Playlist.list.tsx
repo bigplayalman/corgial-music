@@ -3,6 +3,7 @@ import { Pane, Heading, IconButton } from "evergreen-ui";
 import { RxDocument } from "rxdb";
 import CorgialContext from "../../Corgial.Context";
 import { PlaylistProps } from "../../rxdb/schemas/playlist.schema";
+import { actions } from "../../actions";
 
 export const PlaylistList: React.FC<{}> = () => {
   const context = useContext(CorgialContext);
@@ -16,12 +17,18 @@ export const PlaylistList: React.FC<{}> = () => {
       }
     };
     fetchPlaylists();
-    context.events.next({ type: "LAST_ADDED", payload: {} });
+    context.events.next({
+      type: actions.SET_PLAYLIST,
+      payload: { title: "Last Added" }
+    });
   }, [context]);
 
   const selectPlaylist = (id: string) => {
     if (id === "last") {
-      context.events.next({ type: "LAST_ADDED", payload: {} });
+      context.events.next({
+        type: actions.SET_PLAYLIST,
+        payload: { title: "Last Added" }
+      });
     }
   };
 
@@ -42,9 +49,13 @@ export const PlaylistList: React.FC<{}> = () => {
         alignItems="center"
         padding={16}
       >
-        <Heading size={600}>
-          Playlists
-        </Heading>
+        <Heading size={600}>Playlists</Heading>
+        <IconButton
+          height={36}
+          icon="plus"
+          intent="success"
+          onClick={() => selectPlaylist("last")}
+        />
       </Pane>
       <Pane
         display="flex"
@@ -55,26 +66,34 @@ export const PlaylistList: React.FC<{}> = () => {
         margin={8}
       >
         <Heading size={500}>Last Added</Heading>
-        <IconButton height={36} icon="play" intent="success" onClick={() => selectPlaylist("last")} />
+        <IconButton
+          height={36}
+          icon="play"
+          intent="success"
+          onClick={() => selectPlaylist("last")}
+        />
       </Pane>
-      {
-        playlists.map((playlist) => {
-          return (
-            <Pane
-              key={playlist.cid}
-              display="flex"
-              border="default"
-              justifyContent="space-between"
-              alignItems="center"
-              padding={8}
-              margin={8}
-            >
-              <Heading size={500}>{playlist.title}</Heading>
-              <IconButton height={24} icon="play" intent="success" onClick={() => selectPlaylist(playlist.cid)} />
-            </Pane>
-          );
-        })
-      }
+      {playlists.map(playlist => {
+        return (
+          <Pane
+            key={playlist.cid}
+            display="flex"
+            border="default"
+            justifyContent="space-between"
+            alignItems="center"
+            padding={8}
+            margin={8}
+          >
+            <Heading size={500}>{playlist.title}</Heading>
+            <IconButton
+              height={24}
+              icon="play"
+              intent="success"
+              onClick={() => selectPlaylist(playlist.cid)}
+            />
+          </Pane>
+        );
+      })}
     </Pane>
   );
 };

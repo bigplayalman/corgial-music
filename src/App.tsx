@@ -15,8 +15,8 @@ const App: React.FC<{}> = () => {
 
   useEffect(() => {
     const corgial = new CorgialStore();
-    const sub = corgial.status.subscribe((event) => {
-      if (event === "ready") {
+    const sub = corgial.getStore("status").subscribe((event) => {
+      if (event.status === "ready") {
         setStore(corgial);
       }
     });
@@ -40,7 +40,6 @@ const App: React.FC<{}> = () => {
         </Pane>
         <Player />
       </Pane>
-
     </CorgialProvider>
   );
 };

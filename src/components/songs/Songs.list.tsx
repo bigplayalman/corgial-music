@@ -1,35 +1,40 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Pane, Heading } from "evergreen-ui";
-import { RxDocument } from "rxdb";
 import CorgialContext from "../../Corgial.Context";
 import { SongProps } from "../../rxdb/schemas/song.schema";
+import { PlaylistProps } from "../../rxdb/schemas/playlist.schema";
 
 export const SongsList: React.FC = () => {
   const context = useContext(CorgialContext);
-  const [queue, setQueue] = useState<RxDocument<SongProps>[]>([]);
+  const [queue, setQueue] = useState<SongProps[]>([]);
   const [playlist, setPlaylist] = useState<{ title: string }>();
 
   useEffect(() => {
-    const sub = context.events.subscribe(event => {
-      switch (event.type) {
-        case "SET_QUEUE":
-          setQueue(event.payload as RxDocument<SongProps>[]);
-          break;
-        case "LAST_ADDED":
-          setPlaylist({ title: "Last Added" });
-          break;
-        case "SET_PLAYLIST":
-          setPlaylist(event.payload);
-          break;
+    const sub = context.getStore(["queue", "playlist"]).subscribe(state => {
+      for (const value in state) {
+        switch (value) {
+          case "playlist":
+            const list = state[value] as PlaylistProps;
+            setPlaylist(list);
+            list.cid
+              ? context.fetchSongs({ playlists: { $elemMatch: list.cid } })
+              : context.fetchSongs();
+            break;
+          case "queue": {
+            setQueue((state[value] as SongProps[]) || []);
+            break;
+          }
+        }
       }
     });
+
     return () => {
       sub.unsubscribe();
     };
   }, [context]);
 
   const selectSong = (filename: string) => {
-    context.events.next({ type: "GET_SONG", payload: filename });
+    context.getSong(filename);
   };
 
   return (

@@ -7,9 +7,10 @@ export const Player: React.FC = () => {
   const [url, setUrl] = useState<string>();
 
   useEffect(() => {
-    const sub = context.events.subscribe((event) => {
-      if (event.type === "PLAY_SONG") {
-        setUrl(event.payload.url);
+    const sub = context.getStore("song").subscribe((state) => {
+      if (state.song) {
+        console.log(state);
+        setUrl(state.song as string);
       }
     });
     return () => {

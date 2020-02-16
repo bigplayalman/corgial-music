@@ -3,13 +3,13 @@ import PouchAdapterMemory from "pouchdb-adapter-memory";
 import PouchAdapterHttp from "pouchdb-adapter-http";
 import PouchAdapterIdb from "pouchdb-adapter-idb";
 import { Subject, Subscription, from, BehaviorSubject } from "rxjs";
-import { first } from "rxjs/operators";
+import { cloneDeep } from "lodash";
+import { first, pluck, distinctUntilChanged, mergeMap, map } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import * as mm from "music-metadata-browser";
-import { IPicture } from "music-metadata/lib/type";
-
 import { SongProps, songSchema } from "./rxdb/schemas/song.schema";
 import { PlaylistProps, playlistSchema } from "./rxdb/schemas/playlist.schema";
+import { actions } from "./actions";
 
 RxDB.plugin(PouchAdapterMemory);
 RxDB.plugin(PouchAdapterIdb);
@@ -20,6 +20,13 @@ export interface DatabaseCollections {
   playlists: RxCollection<PlaylistProps>;
 }
 
+export interface CorgialState {
+  status: string;
+  queue?: SongProps[];
+  playlist?: PlaylistProps;
+  song?: SongProps;
+}
+
 export interface CorgialEvent {
   type: string;
   payload: any;
@@ -27,91 +34,103 @@ export interface CorgialEvent {
 
 export default class CorgialStore {
   db!: RxDatabase<DatabaseCollections>;
-  events: Subject<CorgialEvent>;
-  status!: BehaviorSubject<string>;
-  playlists!: BehaviorSubject<PlaylistProps[]>;
-  songs!: BehaviorSubject<SongProps[]>;
-  playlist!: Subject<PlaylistProps>;
-  song!: Subject<SongProps>;
-  sub!: Subscription;
-  dbSub!: Subscription;
+  events = new Subject<CorgialEvent>();
+  state = new BehaviorSubject<CorgialState>({ status: "initialized" });
+  subs: Subscription[] = [];
+
   constructor() {
-    this.status = new BehaviorSubject("initialized");
-    this.events = new Subject<CorgialEvent>();
-    this.playlists = new BehaviorSubject<PlaylistProps[]>([]);
-    this.songs = new BehaviorSubject<SongProps[]>([]);
-    this.playlist = new Subject<PlaylistProps>();
-    this.song = new Subject<SongProps>();
     this.reducer();
   }
 
   initialize() {
-    this.dbSub = from(RxDB.create<DatabaseCollections>({
+    const sub = from(RxDB.create<DatabaseCollections>({
       name: "corgial",
       adapter: "idb",
       multiInstance: false,
       queryChangeDetection: true
     })).subscribe((db) => {
-      this.events.next({ type: "DB_CREATED", payload: db });
+      this.events.next({ type: actions.DB_CREATED, payload: db });
     });
+    this.subs.push(sub);
   }
 
   reducer() {
-    this.sub = this.events.subscribe((event) => {
+    const sub = this.events.subscribe((event) => {
+      const state = cloneDeep(this.state.getValue());
       switch (event.type) {
-        case "DB_CREATED": {
+        case actions.DB_CREATED: {
           this.db = event.payload;
           this.createCollections();
           break;
         }
-        case "DB_COLLECTIONS_CREATED": {
-          this.initializeCollections();
+        case actions.DB_SETUP: {
+          state.status = "ready";
           break;
         }
-        case "DB_SETUP": {
-          this.status.next("ready");
+        case actions.SET_PLAYLIST: {
+          state.playlist = event.payload;
           break;
         }
-        case "FILE_UPLOADED": {
+        case actions.SET_QUEUE: {
+          state.queue = event.payload;
+          break;
+        }
+        case actions.PLAY_SONG: {
+          state.song = event.payload;
+          break;
+        }
+        case actions.FILE_UPLOADED: {
           console.log("file", event.payload);
           break;
         }
-        case "FILE_FAILED": {
+        case actions.FILE_FAILED: {
           console.log("failed", event.payload);
-          break;
-        }
-        case "LAST_ADDED": {
-          this.fetchSongs(event.payload || {});
-          break;
-        }
-        case "GET_SONG": {
-          this.getSong(event.payload);
           break;
         }
         default: break;
       }
+      this.state.next(state);
     });
+    this.subs.push(sub);
+  }
+
+  getStore(values: string[] | string) {
+    if (typeof values === "string") {
+      return this.toObservable(values);
+    }
+    const observables = values.map((value) => {
+      return this.toObservable(value);
+    });
+    return from(observables).pipe(mergeMap((value) => value));
+  }
+
+  toObservable(value: string) {
+    return this.state.pipe(
+      pluck<CorgialState, string | SongProps | PlaylistProps | SongProps[]>(value),
+      map((property) => {
+        return ({ [value]: property });
+      }),
+      distinctUntilChanged((a, b) => {
+        return JSON.stringify(a) === JSON.stringify(b);
+      })
+    );
   }
 
   async getSong(song: string) {
     const response = await fetch(`http://localhost:3300/api/download?filename=${song}`);
     const url = await response.text();
-    this.events.next(({type: "PLAY_SONG", payload: {url}}));
+    this.events.next(({ type: actions.PLAY_SONG, payload: url }));
   }
 
   async createCollections() {
     await this.db.collection({ name: "songs", schema: songSchema });
     await this.db.collection({ name: "playlists", schema: playlistSchema });
-    this.events.next({ type: "DB_COLLECTIONS_CREATED", payload: true });
-  }
-
-  async initializeCollections() {
-    this.events.next({ type: "DB_SETUP", payload: true });
+    this.events.next({ type: actions.DB_SETUP, payload: true });
   }
 
   async fetchSongs(options: any = {}) {
     const songs = await this.db.songs.find(options).exec();
-    this.events.next({ type: "SET_QUEUE", payload: songs });
+    this.events.next({ type: actions.SET_QUEUE, payload: songs });
   }
 
   async saveDetails(file: File) {
@@ -137,10 +156,10 @@ export default class CorgialStore {
       dateAdded: Date.now()
     };
     await this.db.songs.atomicUpsert(payload);
-    this.events.next({ type: "FILES_PROGRESS", payload: "add" });
+    this.events.next({ type: actions.FILES_PROGRESS, payload: "add" });
   }
 
-  async savePicture(id: string, picture: IPicture) {
+  async savePicture(id: string, picture: mm.IPicture) {
     const name = `${id}.${picture.format.split("/")[1]}`;
     const blob = new Blob([picture.data], { type: picture.format });
     const url = URL.createObjectURL(blob);
@@ -149,7 +168,7 @@ export default class CorgialStore {
   }
 
   uploadFiles(files: File[]) {
-    this.events.next({ type: "FILES_PROGRESS", payload: "reset" });
+    this.events.next({ type: actions.FILES_PROGRESS, payload: "reset" });
     for (const file of files) {
       const formData = new FormData();
       formData.append("file", file, file.name);
@@ -164,5 +183,9 @@ export default class CorgialStore {
         }
       });
     }
+  }
+
+  destroy() {
+    this.subs.map((sub) => sub.unsubscribe());
   }
 }
