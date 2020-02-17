@@ -4,17 +4,14 @@ import { RxDocument } from "rxdb";
 import CorgialContext from "../../Corgial.Context";
 import { PlaylistProps } from "../../rxdb/schemas/playlist.schema";
 import { navigate } from "hookrouter";
+import { PlaylistItem } from "./Playlist.item";
 
 export const PlaylistList: React.FC<{}> = () => {
   const context = useContext(CorgialContext);
   const [playlists, setPlaylists] = useState<RxDocument<PlaylistProps>[]>([]);
-  const [playlist, setPlaylist] = useState<RxDocument<PlaylistProps>>();
 
   useEffect(() => {
     let ignore = false;
-    const sub = context.getStore("playlist").subscribe(state => {
-      setPlaylist(state.playlist);
-    });
     const fetchPlaylists = async () => {
       if (context.db) {
         const dbplaylists = await context.db.playlists.find().exec();
@@ -28,19 +25,8 @@ export const PlaylistList: React.FC<{}> = () => {
     context.setQuery({});
     return () => {
       ignore = true;
-      sub.unsubscribe();
     };
   }, [context]);
-
-  const selectPlaylist = (list: PlaylistProps) => {
-    if (list.cid === "last") {
-      context.setPlaylist({ title: "Last Added" });
-      context.setQuery({});
-    } else {
-      context.setPlaylist(list);
-      context.setQuery({playlists: { $elemMatch: list.cid }});
-    }
-  };
 
   return (
     <Pane
@@ -69,33 +55,7 @@ export const PlaylistList: React.FC<{}> = () => {
         />
       </Pane>
       {playlists.map(list => {
-        return (
-          <Pane
-            key={list.cid}
-            background={
-              list.title === (playlist && playlist.title)
-                ? "yellowTint"
-                : "tint2"
-            }
-            display="flex"
-            border="default"
-            justifyContent="space-between"
-            alignItems="center"
-            padding={8}
-            onClick={() => selectPlaylist(list)}
-          >
-            <Heading size={500}>{list.title}</Heading>
-            {list.cid !== "last" && (
-              <IconButton
-                height={36}
-                icon="edit"
-                appearance="minimal"
-                intent="warning"
-                onClick={() => navigate(`/library/playlists/${list.cid}`)}
-              />
-            )}
-          </Pane>
-        );
+        return <PlaylistItem key={list.cid} list={list} />;
       })}
     </Pane>
   );
