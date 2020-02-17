@@ -2,35 +2,29 @@ import React, { useState, useEffect, useContext } from "react";
 import { Pane, Heading, Alert } from "evergreen-ui";
 import CorgialContext from "../../Corgial.Context";
 import { SongProps } from "../../rxdb/schemas/song.schema";
+import { TrackItem } from "./Track.item";
 
-interface SonglistProps {
-  cid?: string;
-}
-export const SongsList: React.FC<SonglistProps> = ({ cid }) => {
+export const TrackList: React.FC = () => {
   const context = useContext(CorgialContext);
   const [queue, setQueue] = useState<SongProps[]>([]);
   const [playlist, setPlaylist] = useState<{ title: string }>();
 
   useEffect(() => {
     let ignore = false;
-    const fetchPlaylist = async () => {
-      const dblist = await context.db.playlists.findOne({ cid }).exec();
-      if (dblist) {
-        !ignore && setPlaylist(dblist);
-      } else {
-        !ignore && setPlaylist({ title: "All Tracks" });
-      }
-    };
-    cid === "last" ? setPlaylist({ title: "Last Added" }) : fetchPlaylist();
     const fetchSongs = async (query: any = {}) => {
       const songs = await context.db.songs.find(query).exec();
       !ignore && setQueue(songs);
     };
-    const sub = context.getStore("query").subscribe(state => {
+    const sub = context.getStore(["query", "playlist"]).subscribe(state => {
       for (const value in state) {
         switch (value) {
           case "query": {
             fetchSongs(state[value]);
+            break;
+          }
+          case "playlist": {
+            !ignore && setPlaylist(state[value]);
+            break;
           }
         }
       }
@@ -39,11 +33,7 @@ export const SongsList: React.FC<SonglistProps> = ({ cid }) => {
       ignore = true;
       sub.unsubscribe();
     };
-  }, [context, cid]);
-
-  const selectSong = (filename: string) => {
-    context.getSong(filename);
-  };
+  }, [context]);
 
   return (
     <Pane gridArea="detail" display="grid" overflowY="auto">
@@ -61,21 +51,8 @@ export const SongsList: React.FC<SonglistProps> = ({ cid }) => {
         display="grid" gridTemplateColumns="1fr" gridAutoRows={72} overflowY="auto"
       >
         {queue.length ? (
-          queue.map((song: SongProps) => {
-            return (
-              <Pane
-                key={song.cid}
-                flex="0 0 72px"
-                display="flex"
-                border="default"
-                justifyContent="space-between"
-                alignItems="center"
-                padding={8}
-                onClick={() => selectSong(song.filename)}
-              >
-                <Heading size={500}>{song.title}</Heading>
-              </Pane>
-            );
+          queue.map((track: SongProps) => {
+            return <TrackItem key={track.cid} track={track} />;
           })
         ) : (
           <Pane

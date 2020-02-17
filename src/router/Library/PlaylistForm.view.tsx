@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { PlaylistForm } from "../../components/playlists/Playlist.form";
-import { SongsList } from "../../components/songs/Songs.list";
+import { TrackList } from "../../components/tracks/Track.list";
 
 interface PlaylistFormViewProps {
   cid: string;
@@ -9,7 +9,7 @@ export const PlaylistFormView: React.FC<PlaylistFormViewProps> = ({ cid }) => {
   return (
     <Fragment>
       <PlaylistForm cid={cid} />
-      <SongsList />
+      <TrackList />
     </Fragment>
   );
 };
