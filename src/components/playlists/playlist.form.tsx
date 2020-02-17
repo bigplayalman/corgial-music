@@ -54,6 +54,7 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
 
   return (
     <Pane
+      gridArea="main"
       display="grid"
       gridAutoColumns=".5fr"
       gridAutoRows={72}

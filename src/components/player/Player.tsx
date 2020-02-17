@@ -20,6 +20,7 @@ export const Player: React.FC = () => {
 
   return (
     <Pane
+      gridArea="player"
       background="greenTint"
       boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)"
       position="relative"

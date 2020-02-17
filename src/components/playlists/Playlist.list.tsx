@@ -44,6 +44,7 @@ export const PlaylistList: React.FC<{}> = () => {
 
   return (
     <Pane
+      gridArea="main"
       display="grid"
       gridAutoColumns="1fr"
       gridAutoRows={72}
