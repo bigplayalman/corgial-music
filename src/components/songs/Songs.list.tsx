@@ -14,7 +14,7 @@ export const SongsList: React.FC = () => {
       for (const value in state) {
         switch (value) {
           case "playlist":
-            const list = state[value] as PlaylistProps;
+            const list = state[value] as PlaylistProps || {};
             setPlaylist(list);
             list.cid
               ? context.fetchSongs({ playlists: { $elemMatch: list.cid } })

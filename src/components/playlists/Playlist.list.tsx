@@ -3,32 +3,32 @@ import { Pane, Heading, IconButton } from "evergreen-ui";
 import { RxDocument } from "rxdb";
 import CorgialContext from "../../Corgial.Context";
 import { PlaylistProps } from "../../rxdb/schemas/playlist.schema";
-import { actions } from "../../actions";
+import { navigate } from "hookrouter";
 
 export const PlaylistList: React.FC<{}> = () => {
   const context = useContext(CorgialContext);
   const [playlists, setPlaylists] = useState<RxDocument<PlaylistProps>[]>([]);
 
   useEffect(() => {
+    let ignore = false;
     const fetchPlaylists = async () => {
       if (context.db) {
         const dbplaylists = await context.db.playlists.find().exec();
-        setPlaylists(dbplaylists);
+        const lastAdded: any = { cid: "last", title: "Last Added" };
+        dbplaylists.unshift(lastAdded);
+        !ignore && setPlaylists(dbplaylists);
       }
     };
     fetchPlaylists();
-    context.events.next({
-      type: actions.SET_PLAYLIST,
-      payload: { title: "Last Added" }
-    });
+    context.setPlaylist({ title: "Last Added" });
+    return () => {
+      ignore = true;
+    };
   }, [context]);
 
   const selectPlaylist = (id: string) => {
     if (id === "last") {
-      context.events.next({
-        type: actions.SET_PLAYLIST,
-        payload: { title: "Last Added" }
-      });
+      context.setPlaylist({ title: "Last Added" });
     }
   };
 
@@ -54,23 +54,7 @@ export const PlaylistList: React.FC<{}> = () => {
           height={36}
           icon="plus"
           intent="success"
-          onClick={() => selectPlaylist("last")}
-        />
-      </Pane>
-      <Pane
-        display="flex"
-        border="default"
-        justifyContent="space-between"
-        alignItems="center"
-        padding={8}
-        margin={8}
-      >
-        <Heading size={500}>Last Added</Heading>
-        <IconButton
-          height={36}
-          icon="play"
-          intent="success"
-          onClick={() => selectPlaylist("last")}
+          onClick={() => navigate("/library/playlists/new")}
         />
       </Pane>
       {playlists.map(playlist => {

@@ -1,4 +1,4 @@
-import RxDB, { RxDatabase, RxCollection } from "rxdb";
+import RxDB, { RxDatabase, RxCollection, RxDocument } from "rxdb";
 import PouchAdapterMemory from "pouchdb-adapter-memory";
 import PouchAdapterHttp from "pouchdb-adapter-http";
 import PouchAdapterIdb from "pouchdb-adapter-idb";
@@ -102,6 +102,19 @@ export default class CorgialStore {
       return this.toObservable(value);
     });
     return from(observables).pipe(mergeMap((value) => value));
+  }
+
+  async fetchPlaylist(cid: string) {
+    const playlist = await this.db.playlists.findOne({ cid }).exec();
+    if (playlist)
+      this.setPlaylist(playlist);
+  }
+
+  setPlaylist(playlist: { title: string } | RxDocument<PlaylistProps, {}>) {
+    this.events.next({
+      type: actions.SET_PLAYLIST,
+      payload: playlist
+    });
   }
 
   toObservable(value: string) {

@@ -4,6 +4,6 @@ import { HookRouter } from "hookrouter";
 import { Upload } from "./Upload";
 
 export const routes: HookRouter.RouteObject = {
-  "/": () => <Library />,
-  "/upload": () => <Upload />,
+  "/library*": () => <Library />,
+  "/upload": () => <Upload />
 };
