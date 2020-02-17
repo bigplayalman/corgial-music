@@ -3,36 +3,43 @@ import { Pane, Heading, Alert } from "evergreen-ui";
 import CorgialContext from "../../Corgial.Context";
 import { SongProps } from "../../rxdb/schemas/song.schema";
 
-export const SongsList: React.FC = () => {
+interface SonglistProps {
+  cid?: string;
+}
+export const SongsList: React.FC<SonglistProps> = ({ cid }) => {
   const context = useContext(CorgialContext);
   const [queue, setQueue] = useState<SongProps[]>([]);
   const [playlist, setPlaylist] = useState<{ title: string }>();
 
   useEffect(() => {
     let ignore = false;
+    const fetchPlaylist = async () => {
+      const dblist = await context.db.playlists.findOne({ cid }).exec();
+      if (dblist) {
+        !ignore && setPlaylist(dblist);
+      } else {
+        !ignore && setPlaylist({ title: "All Tracks" });
+      }
+    };
+    cid === "last" ? setPlaylist({ title: "Last Added" }) : fetchPlaylist();
     const fetchSongs = async (query: any = {}) => {
-      console.log("query", query);
       const songs = await context.db.songs.find(query).exec();
       !ignore && setQueue(songs);
     };
-    const sub = context.getStore(["query", "playlist"]).subscribe(state => {
+    const sub = context.getStore("query").subscribe(state => {
       for (const value in state) {
         switch (value) {
-          case "playlist":
-            setPlaylist(state[value]);
-            break;
           case "query": {
             fetchSongs(state[value]);
           }
         }
       }
     });
-
     return () => {
       ignore = true;
       sub.unsubscribe();
     };
-  }, [context]);
+  }, [context, cid]);
 
   const selectSong = (filename: string) => {
     context.getSong(filename);
