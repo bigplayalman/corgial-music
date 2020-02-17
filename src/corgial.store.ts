@@ -4,7 +4,7 @@ import PouchAdapterHttp from "pouchdb-adapter-http";
 import PouchAdapterIdb from "pouchdb-adapter-idb";
 import { Subject, Subscription, from, BehaviorSubject } from "rxjs";
 import { cloneDeep } from "lodash";
-import { first, pluck, distinctUntilChanged, mergeMap, map } from "rxjs/operators";
+import { first, pluck, distinctUntilChanged, mergeMap, map, filter } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import * as mm from "music-metadata-browser";
 import { SongProps, songSchema } from "./rxdb/schemas/song.schema";
@@ -22,7 +22,7 @@ export interface DatabaseCollections {
 
 export interface CorgialState {
   status: string;
-  queue?: SongProps[];
+  query?: any;
   playlist?: PlaylistProps;
   song?: SongProps;
 }
@@ -71,8 +71,8 @@ export default class CorgialStore {
           state.playlist = event.payload;
           break;
         }
-        case actions.SET_QUEUE: {
-          state.queue = event.payload;
+        case actions.SET_QUERY: {
+          state.query = event.payload;
           break;
         }
         case actions.PLAY_SONG: {
@@ -104,10 +104,27 @@ export default class CorgialStore {
     return from(observables).pipe(mergeMap((value) => value));
   }
 
-  async fetchPlaylist(cid: string) {
-    const playlist = await this.db.playlists.findOne({ cid }).exec();
-    if (playlist)
-      this.setPlaylist(playlist);
+  toObservable(value: string) {
+    return this.state.pipe(
+      pluck<CorgialState, string | SongProps | PlaylistProps | SongProps[] | any>(value),
+      map((property) => {
+        return ({ [value]: property });
+      }),
+      filter((mappedValue) => {
+        const exists = Object.keys(mappedValue)[0];
+        return typeof mappedValue[exists] !== "undefined";
+      }),
+      distinctUntilChanged((a, b) => {
+        return JSON.stringify(a) === JSON.stringify(b);
+      })
+    );
+  }
+
+  setQuery(query: any) {
+    this.events.next({
+      type: actions.SET_QUERY,
+      payload: query
+    });
   }
 
   setPlaylist(playlist: { title: string } | RxDocument<PlaylistProps, {}>) {
@@ -117,16 +134,10 @@ export default class CorgialStore {
     });
   }
 
-  toObservable(value: string) {
-    return this.state.pipe(
-      pluck<CorgialState, string | SongProps | PlaylistProps | SongProps[]>(value),
-      map((property) => {
-        return ({ [value]: property });
-      }),
-      distinctUntilChanged((a, b) => {
-        return JSON.stringify(a) === JSON.stringify(b);
-      })
-    );
+  async fetchPlaylist(cid: string) {
+    const playlist = await this.db.playlists.findOne({ cid }).exec();
+    if (playlist)
+      this.setPlaylist(playlist);
   }
 
   async getSong(song: string) {
@@ -139,11 +150,6 @@ export default class CorgialStore {
     await this.db.collection({ name: "songs", schema: songSchema });
     await this.db.collection({ name: "playlists", schema: playlistSchema });
     this.events.next({ type: actions.DB_SETUP, payload: true });
-  }
-
-  async fetchSongs(options: any = {}) {
-    const songs = await this.db.songs.find(options).exec();
-    this.events.next({ type: actions.SET_QUEUE, payload: songs });
   }
 
   async saveDetails(file: File) {
