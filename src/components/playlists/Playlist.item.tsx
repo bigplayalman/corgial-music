@@ -30,7 +30,7 @@ export const PlaylistItem: React.FC<PlaylistItemProps> = ({ list }) => {
       context.setQuery({});
     } else {
       context.setPlaylist(list);
-      context.setQuery({ playlists: { $elemMatch: list.cid } });
+      context.setQuery({ playlists: { $elemMatch: { $eq: list.cid } } });
     }
   };
 

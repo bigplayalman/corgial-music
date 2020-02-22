@@ -14,7 +14,7 @@ export interface SongProps {
   played: number;
   filename: string;
   picture?: string;
-  playlists?: string[];
+  playlists: string[];
   dateAdded: number;
 }
 export const songSchema: RxJsonSchema<SongProps> = {

@@ -7,11 +7,8 @@ export const Player: React.FC = () => {
   const [url, setUrl] = useState<string>();
 
   useEffect(() => {
-    const sub = context.getStore("song").subscribe((state) => {
-      if (state.song) {
-        console.log(state);
-        setUrl(state.song as string);
-      }
+    const sub = context.getStore("filename").subscribe(({ filename }) => {
+      setUrl(filename);
     });
     return () => {
       sub.unsubscribe();
@@ -26,10 +23,7 @@ export const Player: React.FC = () => {
       position="relative"
       zIndex={20}
     >
-      {
-      url &&
-      <audio src={`https://${url}`} autoPlay={true} controls/>
-      }
+      {url && <audio src={`https://${url}`} autoPlay={true} controls />}
     </Pane>
   );
 };

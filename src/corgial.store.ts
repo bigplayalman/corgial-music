@@ -1,4 +1,4 @@
-import RxDB, { RxDatabase, RxCollection, RxDocument } from "rxdb";
+import RxDB, { RxDatabase, RxCollection, RxDocument, RxChangeEventInsert, RxChangeEventUpdate, RxChangeEventRemove } from "rxdb";
 import PouchAdapterMemory from "pouchdb-adapter-memory";
 import PouchAdapterHttp from "pouchdb-adapter-http";
 import PouchAdapterIdb from "pouchdb-adapter-idb";
@@ -24,12 +24,14 @@ export interface CorgialState {
   status: string;
   query?: any;
   playlist?: PlaylistProps;
-  song?: SongProps;
+  track?: SongProps;
+  filename?: string;
+  changes?: RxChangeEventInsert<SongProps> | RxChangeEventUpdate<SongProps> | RxChangeEventRemove<SongProps>;
 }
 
 export interface CorgialEvent {
   type: string;
-  payload: any;
+  payload?: any;
 }
 
 export default class CorgialStore {
@@ -65,18 +67,23 @@ export default class CorgialStore {
         }
         case actions.DB_SETUP: {
           state.status = "ready";
+          this.trackChanges();
           break;
         }
-        case actions.SET_PLAYLIST: {
+        case actions.PLAYLIST_SET: {
           state.playlist = event.payload;
           break;
         }
-        case actions.SET_QUERY: {
+        case actions.QUERY_SET: {
           state.query = event.payload;
           break;
         }
-        case actions.PLAY_SONG: {
-          state.song = event.payload;
+        case actions.SONG_SET: {
+          state.track = event.payload;
+          break;
+        }
+        case actions.SONG_PLAY: {
+          state.filename = event.payload;
           break;
         }
         case actions.FILE_UPLOADED: {
@@ -85,6 +92,10 @@ export default class CorgialStore {
         }
         case actions.FILE_FAILED: {
           console.log("failed", event.payload);
+          break;
+        }
+        case actions.SONG_ADDED: {
+          state.changes = event.payload;
           break;
         }
         default: break;
@@ -122,16 +133,23 @@ export default class CorgialStore {
 
   setQuery(query: any) {
     this.events.next({
-      type: actions.SET_QUERY,
+      type: actions.QUERY_SET,
       payload: query
     });
   }
 
   setPlaylist(playlist: { title: string } | RxDocument<PlaylistProps, {}>) {
     this.events.next({
-      type: actions.SET_PLAYLIST,
+      type: actions.PLAYLIST_SET,
       payload: playlist
     });
+  }
+
+  trackChanges() {
+    const sub = from(this.db.songs.$).subscribe((changes) => {
+      this.events.next({ type: actions.SONG_ADDED, payload: changes });
+    });
+    this.subs.push(sub);
   }
 
   async fetchPlaylist(cid: string) {
@@ -140,10 +158,11 @@ export default class CorgialStore {
       this.setPlaylist(playlist);
   }
 
-  async getSong(song: string) {
-    const response = await fetch(`http://localhost:3300/api/download?filename=${song}`);
+  async getSong(track: SongProps) {
+    const response = await fetch(`http://localhost:3300/api/download?filename=${track.filename}`);
     const url = await response.text();
-    this.events.next(({ type: actions.PLAY_SONG, payload: url }));
+    this.events.next({ type: actions.SONG_SET, payload: track });
+    this.events.next({ type: actions.SONG_PLAY, payload: url });
   }
 
   async createCollections() {
