@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useContext, useEffect } from "react";
+import React, { useState, ChangeEvent, useContext, useEffect, Fragment } from "react";
 import { Pane, TextInputField, Heading, IconButton } from "evergreen-ui";
 import CorgialContext from "../../Corgial.Context";
 import uuid from "uuid";
@@ -41,34 +41,27 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
     }
     cid === "new"
       ? await context.db.playlists.insert({
-          cid: uuid.v4(),
-          title: value,
-          songs: []
-        })
+        cid: uuid.v4(),
+        title: value,
+        songs: []
+      })
       : await context.db.playlists.upsert({
-          cid,
-          title: value
-        });
+        cid,
+        title: value
+      });
     navigate("/library");
   };
 
   return (
-    <Pane
-      gridArea="main"
-      display="grid"
-      gridAutoColumns=".5fr"
-      gridAutoRows={72}
-      boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)"
-      position="relative"
-      zIndex={8}
-    >
+    <Fragment>
       <Pane
-        gridColumn="1 / span 2"
         display="flex"
-        boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)"
+        height={64}
         justifyContent="space-between"
         alignItems="center"
         padding={16}
+        boxShadow="0 0px 1px rgba(0, 0, 0, 0.4)"
+        marginBottom={1}
       >
         <Heading size={600}>
           {cid === "new" ? "New Playlist" : `${value} Playlist`}
@@ -81,7 +74,9 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
           onClick={() => save()}
         />
       </Pane>
-      <Pane padding={8} margin={8} gridColumn="1 / span 2">
+      <Pane
+        padding={16}
+      >
         <TextInputField
           required
           label="Title"
@@ -98,6 +93,6 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
           }
         />
       </Pane>
-    </Pane>
+    </Fragment>
   );
 };

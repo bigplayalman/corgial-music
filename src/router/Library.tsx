@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import { useRoutes, useRedirect, HookRouter } from "hookrouter";
 import { NotFound } from "./NotFound";
 import { PlaylistView } from "./Library/Playlist.view";
-import { PlaylistFormView } from "./Library/PlaylistForm.view";
+import { PlaylistFormView } from "./Library/Playlist.form.view";
 
 const routes = {
   "/playlists": () => <PlaylistView />,

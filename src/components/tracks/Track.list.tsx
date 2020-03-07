@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, Fragment } from "react";
 import { Pane, Heading } from "evergreen-ui";
 import CorgialContext from "../../Corgial.Context";
 import { SongProps } from "../../rxdb/schemas/song.schema";
@@ -47,36 +47,41 @@ export const TrackList: React.FC = () => {
   }, [context]);
 
   return (
-    <Pane gridArea="detail" display="grid" overflowY="auto" gridTemplateRows="72px 1fr">
+    <Fragment>
       <Pane
         display="flex"
         justifyContent="space-between"
-        borderBottom="default"
         alignItems="center"
         padding={16}
+        height={64}
+        boxShadow="0 0px 1px rgba(0, 0, 0, 0.4)"
+        marginBottom={1}
       >
         <Heading size={600}>{playlist && playlist.title}</Heading>
       </Pane>
       <Pane
         display="grid"
-        gridTemplateColumns="1fr"
-        gridAutoRows={72}
+        gridAutoRows={64}
+        height="100%"
+        maxHeight="100%"
         overflowY="auto"
       >
-        {queue.length ? (
-          queue.map(track => {
-            return (
-              <TrackItem key={track.cid} tr={track}>
-                {playlist && playlist.cid && (
-                  <TrackActions track={track} playlist={playlist} />
-                )}
-              </TrackItem>
-            );
-          })
-        ) : (
-          <NoItems message="No songs Available" />
-        )}
+        {
+          queue.length ? (
+            queue.map(track => {
+              return (
+                <TrackItem key={track.cid} tr={track}>
+                  {playlist && playlist.cid && (
+                    <TrackActions track={track} playlist={playlist} />
+                  )}
+                </TrackItem>
+              );
+            })
+          ) : (
+              <NoItems message="No songs Available" />
+            )
+        }
       </Pane>
-    </Pane>
+    </Fragment>
   );
 };

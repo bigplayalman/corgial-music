@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, Fragment } from "react";
 import { Pane, Heading, IconButton } from "evergreen-ui";
 import { RxDocument } from "rxdb";
 import CorgialContext from "../../Corgial.Context";
@@ -29,21 +29,15 @@ export const PlaylistList: React.FC<{}> = () => {
   }, [context]);
 
   return (
-    <Pane
-      gridArea="main"
-      display="grid"
-      gridAutoColumns="1fr"
-      gridAutoRows={72}
-      boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)"
-      position="relative"
-      zIndex={8}
-    >
+    <Fragment>
       <Pane
         display="flex"
-        boxShadow="0px 0px 2px rgba(0, 0, 0, 0.25)"
+        height={64}
         justifyContent="space-between"
         alignItems="center"
         padding={16}
+        boxShadow="0 0px 1px rgba(0, 0, 0, 0.4)"
+        marginBottom={1}
       >
         <Heading size={600}>Playlists</Heading>
         <IconButton
@@ -54,9 +48,19 @@ export const PlaylistList: React.FC<{}> = () => {
           onClick={() => navigate("/library/playlists/new")}
         />
       </Pane>
-      {playlists.map(list => {
-        return <PlaylistItem key={list.cid} list={list} />;
-      })}
-    </Pane>
+      <Pane
+        display="grid"
+        gridAutoRows={64}
+        maxHeight="100%"
+        overflowY="auto"
+      >
+        {
+          playlists.map(list => {
+            return <PlaylistItem key={list.cid} list={list} />;
+          })
+        }
+      </Pane>
+
+    </Fragment>
   );
 };

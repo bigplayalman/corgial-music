@@ -7,3 +7,20 @@ html, body, #root {
 .responsive {
   width: 100%;
 }
+.grid-container {
+  display: grid;
+  height: 100%;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 80px 80px;
+  grid-template-areas: "content" "menu" "player";
+}
+
+.content { 
+  grid-area: content; 
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.menu { grid-area: menu; }
+
+.player { grid-area: player; }

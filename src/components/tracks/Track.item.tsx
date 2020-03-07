@@ -25,9 +25,10 @@ export const TrackItem: React.FC<TrackItemProps> = ({ tr, children }) => {
     <Pane
       flex="0 0 72px"
       display="flex"
-      border="default"
       justifyContent="space-between"
       alignItems="center"
+      boxShadow="0 0px 1px rgba(0, 0, 0, 0.2)"
+      marginBottom={1}
       padding={8}
       background={currentSong === tr.cid ? "greenTint" : "blueTint"}
       onClick={() => selectSong(tr)}

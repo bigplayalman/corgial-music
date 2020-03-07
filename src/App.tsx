@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Pane, Spinner } from "evergreen-ui";
+import { Spinner } from "evergreen-ui";
 import CorgialStore from "./corgial.store";
 import { CorgialProvider } from "./Corgial.Context";
 import { useRoutes, useRedirect } from "hookrouter";
 import { routes } from "./router/routes";
-import { Navigation } from "./components/sidebar/Navigation";
+import { Navigation } from "./components/navigation/Navigation";
 import "./styles.scss";
 import { Player } from "./components/player/Player";
 import { NotFound } from "./router/NotFound";
@@ -34,20 +34,17 @@ const App: React.FC<{}> = () => {
 
   return (
     <CorgialProvider value={store}>
-      <Pane
-        background="tint2"
-        display="grid"
-        maxHeight="100%"
-        height="100%"
-        overflowY="hidden"
-        gridTemplateColumns="200px 1fr 1fr"
-        gridTemplateRows="1fr 80px"
-        gridTemplateAreas="'sidebar main detail' 'player player player'"
-      >
-        <Navigation />
+      <div className="grid-container">
+        <div className="content">
           {routeResult || <NotFound />}
-        <Player />
-      </Pane>
+        </div>
+        <div className="menu">
+          <Navigation />
+        </div>
+        <div className="player">
+          <Player />
+        </div>
+      </div>
     </CorgialProvider>
   );
 };
