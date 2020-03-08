@@ -3,7 +3,6 @@ import {RxJsonSchema} from "rxdb";
 export interface PlaylistProps {
   cid: string;
   title: string;
-  songs: string [];
 }
 
 export const playlistSchema: RxJsonSchema<PlaylistProps> = {
@@ -17,13 +16,6 @@ export const playlistSchema: RxJsonSchema<PlaylistProps> = {
       title: {
         type: "string",
         index: true
-      },
-      songs: {
-        type: "array",
-        ref: "songs",
-        items: {
-          type: "string"
-        }
       }
     }
 };

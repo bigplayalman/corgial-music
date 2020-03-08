@@ -11,30 +11,24 @@ import { NoItems } from "../noItems/noItems";
 export const TrackList: React.FC = () => {
   const context = useContext(CorgialContext);
   const [queue, setQueue] = useState<RxDocument<SongProps>[]>([]);
+  const [query, setQuery] = useState<any>({});
   const [playlist, setPlaylist] = useState<RxDocument<PlaylistProps>>();
 
   useEffect(() => {
     let ignore = false;
-    const fetchSongs = async (query: any = {}) => {
-      console.log(query);
-      const songs = await context.db.songs.find(query).exec();
-      !ignore && setQueue(songs);
-    };
-    const sub = context.getStore(["query", "playlist", "changes"]).subscribe(state => {
+    const sub = context.getStore(["playlist"]).subscribe(state => {
       for (const value in state) {
         switch (value) {
-          case "query": {
-            fetchSongs(state[value]);
+          case "queue": {
+            !ignore && setQueue(state[value]);
             break;
           }
           case "playlist": {
             !ignore && setPlaylist(state[value]);
-            break;
-          }
-          case "changes": {
-            console.log("changes");
-            const query = context.state.getValue().query;
-            fetchSongs(query);
+            const cid = state[value].cid;
+            const q = cid ? { playlists: { $elemMatch: { $eq: cid } } } : {};
+            !ignore && setQuery(q);
+            console.log("playlist", q, state[value]);
             break;
           }
         }

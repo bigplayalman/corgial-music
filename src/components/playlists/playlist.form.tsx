@@ -19,7 +19,6 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
     } else {
       context.fetchPlaylist(cid);
     }
-    context.setQuery({});
     const sub = context.getStore("playlist").subscribe(state => {
       for (const property in state) {
         switch (property) {
@@ -42,8 +41,7 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
     cid === "new"
       ? await context.db.playlists.insert({
         cid: uuid.v4(),
-        title: value,
-        songs: []
+        title: value
       })
       : await context.db.playlists.upsert({
         cid,

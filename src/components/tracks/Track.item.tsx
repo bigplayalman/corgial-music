@@ -23,7 +23,6 @@ export const TrackItem: React.FC<TrackItemProps> = ({ tr, children }) => {
   };
   return (
     <Pane
-      flex="0 0 72px"
       display="flex"
       justifyContent="space-between"
       alignItems="center"

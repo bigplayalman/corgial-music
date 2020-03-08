@@ -1,4 +1,11 @@
-import RxDB, { RxDatabase, RxCollection, RxDocument, RxChangeEventInsert, RxChangeEventUpdate, RxChangeEventRemove } from "rxdb";
+import RxDB, {
+  RxDatabase,
+  RxCollection,
+  RxDocument,
+  RxChangeEventInsert,
+  RxChangeEventUpdate,
+  RxChangeEventRemove
+} from "rxdb";
 import PouchAdapterMemory from "pouchdb-adapter-memory";
 import PouchAdapterHttp from "pouchdb-adapter-http";
 import PouchAdapterIdb from "pouchdb-adapter-idb";
@@ -10,6 +17,7 @@ import * as mm from "music-metadata-browser";
 import { SongProps, songSchema } from "./rxdb/schemas/song.schema";
 import { PlaylistProps, playlistSchema } from "./rxdb/schemas/playlist.schema";
 import { actions } from "./actions";
+import { CorgialAudio } from "./corgial.audio";
 
 RxDB.plugin(PouchAdapterMemory);
 RxDB.plugin(PouchAdapterIdb);
@@ -22,10 +30,10 @@ export interface DatabaseCollections {
 
 export interface CorgialState {
   status: string;
-  query?: any;
+  filename?: string;
+  queue?: SongProps[];
   playlist?: PlaylistProps;
   track?: SongProps;
-  filename?: string;
   changes?: RxChangeEventInsert<SongProps> | RxChangeEventUpdate<SongProps> | RxChangeEventRemove<SongProps>;
 }
 
@@ -38,8 +46,8 @@ export default class CorgialStore {
   db!: RxDatabase<DatabaseCollections>;
   events = new Subject<CorgialEvent>();
   state = new BehaviorSubject<CorgialState>({ status: "initialized" });
+  music = new CorgialAudio();
   subs: Subscription[] = [];
-
   constructor() {
     this.reducer();
   }
@@ -74,15 +82,15 @@ export default class CorgialStore {
           state.playlist = event.payload;
           break;
         }
-        case actions.QUERY_SET: {
-          state.query = event.payload;
+        case actions.QUEUE_SET: {
+          state.queue = event.payload;
           break;
         }
         case actions.SONG_SET: {
           state.track = event.payload;
           break;
         }
-        case actions.SONG_PLAY: {
+        case actions.FILENAME_SET: {
           state.filename = event.payload;
           break;
         }
@@ -112,7 +120,13 @@ export default class CorgialStore {
     const observables = values.map((value) => {
       return this.toObservable(value);
     });
-    return from(observables).pipe(mergeMap((value) => value));
+    return from(observables).pipe(
+      mergeMap((value) => value),
+      distinctUntilChanged((a, b) => {
+        const result = JSON.stringify(a) === JSON.stringify(b);
+        return result;
+      })
+    );
   }
 
   toObservable(value: string) {
@@ -126,16 +140,10 @@ export default class CorgialStore {
         return typeof mappedValue[exists] !== "undefined";
       }),
       distinctUntilChanged((a, b) => {
-        return JSON.stringify(a) === JSON.stringify(b);
+        const result = JSON.stringify(a) === JSON.stringify(b);
+        return result;
       })
     );
-  }
-
-  setQuery(query: any) {
-    this.events.next({
-      type: actions.QUERY_SET,
-      payload: query
-    });
   }
 
   setPlaylist(playlist: { title: string } | RxDocument<PlaylistProps, {}>) {
@@ -152,6 +160,13 @@ export default class CorgialStore {
     this.subs.push(sub);
   }
 
+  async fetchQueue(query: any) {
+    const payload = await this.db.songs.find(query).exec();
+    if (payload) {
+      this.events.next({ type: actions.QUEUE_SET, payload });
+    }
+  }
+
   async fetchPlaylist(cid: string) {
     const playlist = await this.db.playlists.findOne({ cid }).exec();
     if (playlist)
@@ -161,8 +176,8 @@ export default class CorgialStore {
   async getSong(track: SongProps) {
     const response = await fetch(`http://localhost:3300/api/download?filename=${track.filename}`);
     const url = await response.text();
+    this.events.next({ type: actions.FILENAME_SET, payload: url });
     this.events.next({ type: actions.SONG_SET, payload: track });
-    this.events.next({ type: actions.SONG_PLAY, payload: url });
   }
 
   async createCollections() {
@@ -199,9 +214,8 @@ export default class CorgialStore {
 
   async savePicture(id: string, picture: mm.IPicture) {
     const name = `${id}.${picture.format.split("/")[1]}`;
-    const blob = new Blob([picture.data], { type: picture.format });
-    const url = URL.createObjectURL(blob);
-    console.log(name, url);
+    // const blob = new Blob([picture.data], { type: picture.format });
+    // const url = URL.createObjectURL(blob);
     return name;
   }
 

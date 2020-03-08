@@ -27,10 +27,8 @@ export const PlaylistItem: React.FC<PlaylistItemProps> = ({ list }) => {
   const selectPlaylist = () => {
     if (list.cid === "last") {
       context.setPlaylist({ title: "Last Added" });
-      context.setQuery({});
     } else {
       context.setPlaylist(list);
-      context.setQuery({ playlists: { $elemMatch: { $eq: list.cid } } });
     }
   };
 

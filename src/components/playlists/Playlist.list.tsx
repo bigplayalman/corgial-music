@@ -22,7 +22,6 @@ export const PlaylistList: React.FC<{}> = () => {
     };
     fetchPlaylists();
     context.setPlaylist({ title: "Last Added" });
-    context.setQuery({});
     return () => {
       ignore = true;
     };
