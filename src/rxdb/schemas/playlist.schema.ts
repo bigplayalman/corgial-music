@@ -1,7 +1,7 @@
 import {RxJsonSchema} from "rxdb";
 
 export interface PlaylistProps {
-  cid: string;
+  cid?: string;
   title: string;
 }
 

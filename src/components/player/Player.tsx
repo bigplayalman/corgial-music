@@ -25,7 +25,7 @@ export const Player: React.FC = () => {
     });
     return () => {
       state.unsubscribe();
-      audio.unsubscribe();
+      return audio && audio.unsubscribe();
     };
   }, [context]);
 

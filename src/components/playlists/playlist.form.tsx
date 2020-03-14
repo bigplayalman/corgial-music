@@ -1,58 +1,59 @@
-import React, { useState, ChangeEvent, useContext, useEffect, Fragment } from "react";
-import { Pane, TextInputField, Heading, IconButton } from "evergreen-ui";
+import React, { useState, ChangeEvent, useContext, useEffect } from "react";
+import { Pane, IconButton, TextInput } from "evergreen-ui";
 import CorgialContext from "../../Corgial.Context";
 import uuid from "uuid";
 import { navigate } from "hookrouter";
+import { PlaylistProps } from "../../rxdb/schemas/playlist.schema";
 
 export interface PlayFormProps {
   cid: string;
 }
 
 export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
-  const [value, setValue] = useState("");
+  const [playlist, setPlaylist] = useState<PlaylistProps>({ title: "new" });
   const [dirty, setDirty] = useState(false);
   const context = useContext(CorgialContext);
 
   useEffect(() => {
-    if (cid === "new") {
-      context.setPlaylist({ title: "All Songs" });
-    } else {
-      context.fetchPlaylist(cid);
-    }
+    let ignore = false;
     const sub = context.getStore("playlist").subscribe(state => {
       for (const property in state) {
         switch (property) {
           case "playlist":
-            setValue(state[property].title);
+            !ignore && setPlaylist(state[property]);
             break;
         }
       }
     });
+
+    if (cid !== "new") {
+      context.fetchPlaylist(cid);
+    }
     return () => {
       sub.unsubscribe();
+      ignore = true;
     };
   }, [context, cid]);
 
   const save = async () => {
     setDirty(true);
-    if (!value) {
+    if (!playlist.title) {
       return;
     }
     cid === "new"
       ? await context.db.playlists.insert({
         cid: uuid.v4(),
-        title: value
+        title: playlist.title
       })
       : await context.db.playlists.upsert({
         cid,
-        title: value
+        title: playlist.title
       });
     navigate("/library");
   };
 
   return (
-    <Fragment>
-      <Pane
+    <Pane
         display="flex"
         height={64}
         justifyContent="space-between"
@@ -61,10 +62,19 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
         boxShadow="0 0px 1px rgba(0, 0, 0, 0.4)"
         marginBottom={1}
       >
-        <Heading size={600}>
-          {cid === "new" ? "New Playlist" : `${value} Playlist`}
-        </Heading>
+        <TextInput
+          required
+          flex="1"
+          value={playlist.title}
+          placeholder="Title of the playlist..."
+          isInvalid={dirty && !playlist.title.length}
+          onInput={() => setDirty(true)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setPlaylist({ ...playlist, title: e.target.value })
+          }
+        />
         <IconButton
+          paddingLeft={8}
           height={36}
           icon="floppy-disk"
           intent="success"
@@ -72,25 +82,5 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
           onClick={() => save()}
         />
       </Pane>
-      <Pane
-        padding={16}
-      >
-        <TextInputField
-          required
-          label="Title"
-          width="100%"
-          value={value}
-          placeholder="Title of the playlist..."
-          isInvalid={dirty && !value.length}
-          validationMessage={
-            dirty && !value.length ? "Title is required." : null
-          }
-          onInput={() => setDirty(true)}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setValue(e.target.value)
-          }
-        />
-      </Pane>
-    </Fragment>
   );
 };
