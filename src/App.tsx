@@ -15,15 +15,17 @@ const App: React.FC<{}> = () => {
   useRedirect("/", "/library");
 
   useEffect(() => {
+    let valid = true;
     const corgial = new CorgialStore();
     const sub = corgial.getStore("status").subscribe(event => {
       if (event.status === "ready") {
-        setStore(corgial);
+        valid && setStore(corgial);
       }
     });
 
     corgial.initialize();
     return () => {
+      valid = false;
       sub.unsubscribe();
     };
   }, []);

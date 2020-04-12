@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { PlaylistForm } from "../../components/playlists/Playlist.form";
 import { TrackList } from "../../components/tracks/Track.list";
 import { Pane } from "evergreen-ui";
+import { PlaylistForm } from "../../components/playlists/playlist.form";
 
 interface PlaylistFormViewProps {
   cid: string;

@@ -31,6 +31,7 @@ export const TrackList: React.FC<TrackListProps> = ({ playlist, query, shadow })
         });
         return !ignore && setQueue(filtered || response);
       }
+      return setQueue(response);
     };
     const getQueue = async () => {
       const response = await context.db.songs.find(query || {}).exec();
