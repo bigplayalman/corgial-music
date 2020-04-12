@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Pane } from "evergreen-ui";
+import React, { useState, useEffect, useContext, ChangeEvent } from "react";
+import { Pane, SearchInput } from "evergreen-ui";
 import { RxDocument } from "rxdb";
 import CorgialContext from "../../Corgial.Context";
 import { SongProps } from "../../rxdb/schemas/song.schema";
@@ -15,12 +15,26 @@ interface TrackListProps {
 export const TrackList: React.FC<TrackListProps> = ({ playlist, query, shadow }) => {
   const context = useContext(CorgialContext);
   const [queue, setQueue] = useState<RxDocument<SongProps>[]>([]);
+  const [search, setSearch] = useState<string>("");
 
   useEffect(() => {
     let ignore = false;
+    const filterQueue = (response: RxDocument<SongProps, {}>[]) => {
+      if (search.length) {
+        const filtered = response.filter((value: any) => {
+          for (const prop in value) {
+            if (typeof value[prop] === "string" && value[prop].includes(search)) {
+              return true;
+            }
+          }
+          return false;
+        });
+        return !ignore && setQueue(filtered || response);
+      }
+    };
     const getQueue = async () => {
-      const response =  await context.db.songs.find(query || {}).exec();
-      return !ignore && setQueue(response);
+      const response = await context.db.songs.find(query || {}).exec();
+      filterQueue(response);
     };
     getQueue();
     const sub = context.db.songs.$.subscribe(() => {
@@ -30,7 +44,7 @@ export const TrackList: React.FC<TrackListProps> = ({ playlist, query, shadow })
       ignore = true;
       sub.unsubscribe();
     };
-  }, [query, context]);
+  }, [query, context, search]);
 
   return (
     <Pane
@@ -41,6 +55,16 @@ export const TrackList: React.FC<TrackListProps> = ({ playlist, query, shadow })
       overflowY="auto"
       boxShadow={shadow}
     >
+      <Pane
+        display="flex"
+        border="default"
+        alignItems="center"
+        padding={16}>
+        <SearchInput
+          placeholder="Filter tracks..."
+          width="100%" value={search}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} />
+      </Pane>
       {
         queue.length ? (
           queue.map(track => {
