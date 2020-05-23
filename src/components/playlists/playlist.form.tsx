@@ -2,7 +2,6 @@ import React, { useState, ChangeEvent, useContext, useEffect } from "react";
 import { Pane, IconButton, TextInput } from "evergreen-ui";
 import CorgialContext from "../../Corgial.Context";
 import uuid from "uuid";
-import { navigate } from "hookrouter";
 import { PlaylistProps } from "../../rxdb/schemas/playlist.schema";
 
 export interface PlayFormProps {
@@ -16,21 +15,15 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
 
   useEffect(() => {
     let ignore = false;
-    const sub = context.getStore("playlist").subscribe(state => {
-      for (const property in state) {
-        switch (property) {
-          case "playlist":
-            !ignore && setPlaylist(state[property]);
-            break;
-        }
+    const fetchPlaylist = async () => {
+      const dbPlaylist = await context.db.playlists.findOne(cid).exec();
+      if (dbPlaylist) {
+        !ignore && setPlaylist(dbPlaylist);
       }
-    });
+    };
 
-    if (cid !== "new") {
-      context.fetchPlaylist(cid);
-    }
+    fetchPlaylist();
     return () => {
-      sub.unsubscribe();
       ignore = true;
     };
   }, [context, cid]);
@@ -49,7 +42,6 @@ export const PlaylistForm: React.FC<PlayFormProps> = ({ cid }) => {
         cid,
         title: playlist.title
       });
-    navigate("/library");
   };
 
   return (

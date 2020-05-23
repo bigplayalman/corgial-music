@@ -19,7 +19,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({ tr, children }) => {
   }, [context]);
 
   const selectSong = (t: SongProps) => {
-    context.getSong(t);
+    context.getTrack(t);
   };
   return (
     <Pane

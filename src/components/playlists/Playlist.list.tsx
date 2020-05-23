@@ -5,27 +5,29 @@ import CorgialContext from "../../Corgial.Context";
 import { PlaylistProps } from "../../rxdb/schemas/playlist.schema";
 import { navigate } from "hookrouter";
 import { PlaylistItem } from "./Playlist.item";
+import { actions } from "../../actions";
 
 export const PlaylistList: React.FC<{}> = () => {
   const context = useContext(CorgialContext);
   const [playlists, setPlaylists] = useState<RxDocument<PlaylistProps>[]>([]);
+  const [selected, setSelected] = useState<PlaylistProps>();
 
   useEffect(() => {
     let ignore = false;
     const fetchPlaylists = async () => {
-      if (context.db) {
-        const dbplaylists = await context.db.playlists.find().exec();
-        const lastAdded: any = { cid: "last", title: "Last Added" };
-        dbplaylists.unshift(lastAdded);
-        !ignore && setPlaylists(dbplaylists);
-      }
+      const dbplaylists = await context.db.playlists.find().exec();
+      return !ignore && setPlaylists(dbplaylists);
     };
     fetchPlaylists();
-    context.setPlaylist({ title: "Last Added" });
     return () => {
       ignore = true;
     };
   }, [context]);
+
+  const onClick = (playlist: PlaylistProps) => {
+    setSelected(playlist);
+    context.events.next({ type: actions.PLAYLIST_SET, payload: playlist });
+  };
 
   return (
     <Fragment>
@@ -55,7 +57,7 @@ export const PlaylistList: React.FC<{}> = () => {
       >
         {
           playlists.map(list => {
-            return <PlaylistItem key={list.cid} list={list} />;
+            return <PlaylistItem key={list.cid} list={list} onClick={onClick} selected={selected} />;
           })
         }
       </Pane>

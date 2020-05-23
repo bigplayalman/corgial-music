@@ -1,7 +1,6 @@
 import RxDB, {
   RxDatabase,
   RxCollection,
-  RxDocument,
   RxChangeEventInsert,
   RxChangeEventUpdate,
   RxChangeEventRemove
@@ -31,8 +30,8 @@ export interface DatabaseCollections {
 export interface CorgialState {
   status: string;
   filename?: string;
-  queue?: SongProps[];
   playlist?: PlaylistProps;
+  queue?: SongProps[];
   track?: SongProps;
   changes?: RxChangeEventInsert<SongProps> | RxChangeEventUpdate<SongProps> | RxChangeEventRemove<SongProps>;
 }
@@ -78,16 +77,8 @@ export default class CorgialStore {
           this.trackChanges();
           break;
         }
-        case actions.PLAYLIST_SET: {
-          state.playlist = event.payload;
-          break;
-        }
         case actions.QUEUE_SET: {
           state.queue = event.payload;
-          break;
-        }
-        case actions.SONG_SET: {
-          state.track = event.payload;
           break;
         }
         case actions.FILENAME_SET: {
@@ -102,7 +93,15 @@ export default class CorgialStore {
           console.log("failed", event.payload);
           break;
         }
-        case actions.SONG_ADDED: {
+        case actions.PLAYLIST_SET: {
+          state.playlist = event.payload;
+          break;
+        }
+        case actions.TRACK_SET: {
+          state.track = event.payload;
+          break;
+        }
+        case actions.TRACK_ADD: {
           state.changes = event.payload;
           break;
         }
@@ -131,7 +130,7 @@ export default class CorgialStore {
 
   toObservable(value: string) {
     return this.state.pipe(
-      pluck<CorgialState, string | SongProps | PlaylistProps | SongProps[] | any>(value),
+      pluck<CorgialState, any>(value),
       map((property) => {
         return ({ [value]: property });
       }),
@@ -146,38 +145,18 @@ export default class CorgialStore {
     );
   }
 
-  setPlaylist(playlist: { title: string } | RxDocument<PlaylistProps, {}>) {
-    this.events.next({
-      type: actions.PLAYLIST_SET,
-      payload: playlist
-    });
-  }
-
   trackChanges() {
     const sub = from(this.db.songs.$).subscribe((changes) => {
-      this.events.next({ type: actions.SONG_ADDED, payload: changes });
+      this.events.next({ type: actions.TRACK_ADD, payload: changes });
     });
     this.subs.push(sub);
   }
 
-  async fetchQueue(query: any) {
-    const payload = await this.db.songs.find(query).exec();
-    if (payload) {
-      this.events.next({ type: actions.QUEUE_SET, payload });
-    }
-  }
-
-  async fetchPlaylist(cid: string) {
-    const playlist = await this.db.playlists.findOne({ cid }).exec();
-    if (playlist)
-      this.setPlaylist(playlist);
-  }
-
-  async getSong(track: SongProps) {
+  async getTrack(track: SongProps) {
     const response = await fetch(`http://localhost:3300/api/download?filename=${track.filename}`);
     const url = await response.text();
     this.events.next({ type: actions.FILENAME_SET, payload: url });
-    this.events.next({ type: actions.SONG_SET, payload: track });
+    this.events.next({ type: actions.TRACK_SET, payload: track });
   }
 
   async createCollections() {
